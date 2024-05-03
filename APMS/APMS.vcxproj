@@ -137,6 +137,7 @@
     <ClCompile Include="MyWnds.cpp" />
     <ClCompile Include="Notification.cpp" />
     <ClCompile Include="Permission.cpp" />
+    <ClCompile Include="Recharge.cpp" />
     <ClCompile Include="Time.cpp" />
     <ClCompile Include="Trade.cpp" />
   </ItemGroup>
@@ -148,6 +149,7 @@
     <ClInclude Include="MyWnds.h" />
     <ClInclude Include="Notification.h" />
     <ClInclude Include="Permission.h" />
+    <ClInclude Include="Recharge.h" />
     <ClInclude Include="Time.h" />
     <ClInclude Include="Trade.h" />
   </ItemGroup>

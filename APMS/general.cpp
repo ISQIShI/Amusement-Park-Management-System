@@ -1,5 +1,12 @@
 #include"general.h"
 
+HINSTANCE hInstance;
+int defScreenWidth = GetSystemMetrics(SM_CXMAXIMIZED);
+int defScreenHeight = GetSystemMetrics(SM_CYMAXIMIZED);
+int defMainWndWidth = 0.7*defScreenWidth;
+int defMainWndHeight = 0.7* defScreenHeight;
+
+
 //打开我的github项目页面
 void OpenMyGitHubProjectPage() {
 

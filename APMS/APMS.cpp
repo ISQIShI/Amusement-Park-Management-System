@@ -1,10 +1,12 @@
 #include"general.h"
 #include"MyWnds.h"
 
-
-int WINAPI _tWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPreInstance, _In_ LPTSTR lpCmdLine, _In_ INT nShowCmd)
+int WINAPI _tWinMain(_In_ HINSTANCE _hInstance, _In_opt_ HINSTANCE hPreInstance, _In_ LPTSTR lpCmdLine, _In_ INT nShowCmd)
 {
-	
-	thread(MyWnds::MainWnd,hInstance).join();
+	//接收应用程序的当前实例的句柄
+	hInstance = _hInstance;
+
+
+	thread(MyWnds::MainWnd).join();
 	return 0;
 }
