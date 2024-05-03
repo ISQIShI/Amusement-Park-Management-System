@@ -131,6 +131,7 @@
   <ItemGroup>
     <ClCompile Include="Account.cpp" />
     <ClCompile Include="APMS.cpp" />
+    <ClCompile Include="Device.cpp" />
     <ClCompile Include="Door.cpp" />
     <ClCompile Include="general.cpp" />
     <ClCompile Include="MyWnds.cpp" />
