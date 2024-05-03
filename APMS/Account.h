@@ -1,24 +1,36 @@
 #pragma once
 #include"general.h"
-//账户名称的长度
-#define actName 10
-//用户名的长度
-#define actUserName 10
-//密码的长度
-#define actPasswd 10
+#include"Time.h"
+#include"Permission.h"
 
 class Account {
 private:
-	TCHAR mName[actName];
+	//用户名
 	TCHAR mUserName[actUserName];
+	//用户密码
 	TCHAR mPasswd[actPasswd];
+	//用户昵称
+	TCHAR mName[actName];
+	//用户权限
 	Permission mPer;
-	Time mRegTime;
+	//用户余额
 	UINT mCredit;
+	//用户注册时间
+	Time mRegTime;
+	//用户总个数
 	static UINT mCount;
 public:
+	//增加用户
 	void ActAdd();
+	//修改用户
 	void ActModify();
+	//删除用户
 	void ActDelete();
+	//购票
+	void BuyTicket();
+	//充值
+	void Recharge();
+	//提现
+	void Withdraw();
 };
 

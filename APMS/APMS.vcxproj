@@ -135,8 +135,10 @@
     <ClCompile Include="Door.cpp" />
     <ClCompile Include="general.cpp" />
     <ClCompile Include="MyWnds.cpp" />
+    <ClCompile Include="Notification.cpp" />
     <ClCompile Include="Permission.cpp" />
     <ClCompile Include="Time.cpp" />
+    <ClCompile Include="Trade.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Account.h" />
@@ -144,8 +146,10 @@
     <ClInclude Include="Door.h" />
     <ClInclude Include="general.h" />
     <ClInclude Include="MyWnds.h" />
+    <ClInclude Include="Notification.h" />
     <ClInclude Include="Permission.h" />
     <ClInclude Include="Time.h" />
+    <ClInclude Include="Trade.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -26,10 +26,11 @@ LRESULT CALLBACK MainWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		return DefWindowProc(hwnd, uMsg, wParam, lParam);
 		break;
 	}
+	return 0;
 }
 
 
-int MyWnds::MainWnd(HINSTANCE hInstance) {
+WPARAM MyWnds::MainWnd(HINSTANCE hInstance) {
 	//实例化窗口类对象---主窗口
 	WNDCLASSEX mainWndClass = { 0 };
 	mainWndClass.cbSize = sizeof(WNDCLASSEX);

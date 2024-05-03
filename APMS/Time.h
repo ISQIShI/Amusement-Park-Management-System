@@ -1,11 +1,9 @@
 #pragma once
 #include"general.h"
-//日期的长度
-#define timeDate 11
-//时刻的长度
-#define timeMoment 9
 
 class Time {
+	//日期（年月日）
 	TCHAR mDate[timeDate];
+	//时刻（时分秒）
 	TCHAR mMoment[timeMoment];
 };
