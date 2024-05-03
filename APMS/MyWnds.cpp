@@ -1,5 +1,6 @@
 #include"MyWnds.h"
 
+
 //构建窗口过程---主菜单
 LRESULT CALLBACK MainWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 	switch (uMsg)
@@ -28,7 +29,7 @@ LRESULT CALLBACK MainWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 }
 
 
-void MyWnds::MainWnd(HINSTANCE hInstance) {
+int MyWnds::MainWnd(HINSTANCE hInstance) {
 	//实例化窗口类对象---主窗口
 	WNDCLASSEX mainWndClass = { 0 };
 	mainWndClass.cbSize = sizeof(WNDCLASSEX);
@@ -72,5 +73,7 @@ void MyWnds::MainWnd(HINSTANCE hInstance) {
 			TranslateMessage(&Msg);
 			DispatchMessage(&Msg);
 		}
+		
 	}
+	return Msg.wParam;
 }

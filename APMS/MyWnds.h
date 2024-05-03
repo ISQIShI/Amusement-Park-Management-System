@@ -5,5 +5,5 @@ LRESULT CALLBACK MainWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 class MyWnds {
 public:
-	static void MainWnd(HINSTANCE hInstance);
+	static int MainWnd(HINSTANCE hInstance);
 };

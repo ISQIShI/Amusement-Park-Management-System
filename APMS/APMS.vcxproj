@@ -129,13 +129,22 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Account.cpp" />
     <ClCompile Include="APMS.cpp" />
+    <ClCompile Include="Door.cpp" />
+    <ClCompile Include="general.cpp" />
     <ClCompile Include="MyWnds.cpp" />
+    <ClCompile Include="Permission.cpp" />
+    <ClCompile Include="Time.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Account.h" />
+    <ClInclude Include="Device.h" />
+    <ClInclude Include="Door.h" />
     <ClInclude Include="general.h" />
     <ClInclude Include="MyWnds.h" />
+    <ClInclude Include="Permission.h" />
+    <ClInclude Include="Time.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
