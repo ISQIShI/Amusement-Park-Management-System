@@ -4,7 +4,7 @@
 #include"Permission.h"
 
 class Account {
-private:
+public:
 	//用户名
 	TCHAR mUserName[actUserName];
 	//用户密码
