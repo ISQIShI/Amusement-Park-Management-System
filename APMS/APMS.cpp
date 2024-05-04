@@ -7,6 +7,6 @@ int WINAPI _tWinMain(_In_ HINSTANCE _hInstance, _In_opt_ HINSTANCE hPreInstance,
 	hInstance = _hInstance;
 
 
-	thread(MyWnds::MainWnd).join();
+	MyWnds::MainWnd();
 	return 0;
 }

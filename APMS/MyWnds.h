@@ -12,6 +12,12 @@
 #define userNameStaticID 201
 #define passwdStaticID 202
 
+extern HDC hDC;
+extern LOGFONT defLogFont;
+extern HFONT defHFont;
+extern HBRUSH defHBrush;
+extern UINT newMainWndWidth, newMainWndHeight;
+
 LRESULT CALLBACK MainWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 class MyWnds {

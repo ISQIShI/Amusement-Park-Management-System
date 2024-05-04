@@ -9,7 +9,6 @@ int defMainWndHeight = 0.7* defScreenHeight;
 
 //打开我的github项目页面
 void OpenMyGitHubProjectPage() {
-
 	//创建相关结构体对象
 	SHELLEXECUTEINFO apms = { 0 };
 	apms.cbSize = sizeof(SHELLEXECUTEINFO);
