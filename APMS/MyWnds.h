@@ -77,6 +77,9 @@ public:
 	static WPARAM HomePageProc_wParam;
 	static LPARAM HomePageProc_lParam;
 
+	//创建字体
+	static void CreateFont();
+
 	//主窗口
 	static LRESULT CALLBACK MainWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 	static void MainWndProc_WM_COMMAND();
