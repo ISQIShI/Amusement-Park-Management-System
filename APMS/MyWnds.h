@@ -6,16 +6,21 @@
 #pragma comment(linker,"\"/manifestdependency:type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
 
 //子窗口标识符
-#define homePageWnd 1//主页
-#define actInfoWnd 2//用户信息
-#define devInfoWnd 3//设备信息
-#define tradeInfoWnd 4//交易记录（需要权限）
+#define homePageWndID 1//主页
+#define actInfoWndID 2//用户信息
+#define devInfoWndID 3//设备信息
+#define tradeInfoWndID 4//交易记录（需要权限）
+
 //按钮
 #define loginButtonID 101//登录
 #define loginConfirmButtonID 102//确认登录
 #define registerButtonID 103//注册
 #define registerConfirmButtonID 104//确认注册
-#define logoutButtonID 105//登出
+#define homePageButtonID 105//主页按钮
+#define actInfoButtonID 106//用户信息按钮
+#define devInfoButtonID 107//设备信息按钮
+#define tradeInfoButtonID 108//交易记录按钮（需要权限）
+#define exitButtonID 109//退出系统
 //编辑框
 #define userNameEditID 201//用户名
 #define passwdEditID 202//密码
@@ -34,6 +39,12 @@
 #define defSmallFont 1
 #define defMidFont 2
 #define defLargeFont 3
+
+//各控件坐标
+#define homePageButtonCoord_X 0.05
+#define homePageButtonCoord_Y 0.125
+#define homePageButtonWidth 0.1
+#define homePageButtonHeight 0.1
 
 class MyWnds {
 public:
@@ -101,4 +112,19 @@ public:
 	static LRESULT HomePageProc_WM_CTLCOLORSTATIC();
 	static void HomePageProc_WM_PAINT();
 	static void HomePage();
+
+	//控件
+	static void createLoginButton();
+	static void createLoginConfirmButton();
+	static void createRegisterButton();
+	static void createRegisterConfirmButton();
+	static void createHomePageButton();
+	static void createActInfoButton();
+	static void createDevInfoButton();
+	static void createTradeInfoButton();
+	static void createExitButton();
+
+	static void createUserNameEdit_Static();
+	static void createPasswdEdit_Static();
+	static void createActNameEdit_Static();
 };

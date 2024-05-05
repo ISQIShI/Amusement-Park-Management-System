@@ -10,5 +10,5 @@ public:
 	static void Register();
 	static void RegisterConfirm();
 	//µÇ³öÕË»§
-	static void Logout();
+	static void Exit();
 };

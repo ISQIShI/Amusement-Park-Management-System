@@ -3,25 +3,10 @@
 #include"MyWnds.h"
 
 void Door::Login() {
-	//销毁控件
-	DestroyWindow(GetDlgItem(MyWnds::MainWndProc_hwnd, loginButtonID));
-	DestroyWindow(GetDlgItem(MyWnds::MainWndProc_hwnd, registerConfirmButtonID));
-	DestroyWindow(GetDlgItem(MyWnds::MainWndProc_hwnd, actNameStaticID));
-	DestroyWindow(GetDlgItem(MyWnds::MainWndProc_hwnd, actNameEditID));
-	//创建登录按钮
-	CreateWindowEx(
-		0, WC_BUTTON, _T("登录"), WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-		int(0.27 * MyWnds::MyWnds::defMainWndWidth), int(0.55 * MyWnds::defMainWndHeight), int(0.15 * MyWnds::defMainWndWidth), int(0.15 * MyWnds::defMainWndHeight),
-		MyWnds::MainWndProc_hwnd, HMENU(loginConfirmButtonID), MyWnds::hInstance, NULL
-	);
-	SendMessage(GetDlgItem(MyWnds::MainWndProc_hwnd, loginConfirmButtonID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
-	//创建注册按钮
-	CreateWindowEx(
-		0, WC_BUTTON, _T("没有账号？点此注册"), WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-		int(0.52 * MyWnds::defMainWndWidth), int(0.55 * MyWnds::defMainWndHeight), int(0.15 * MyWnds::defMainWndWidth), int(0.15 * MyWnds::defMainWndHeight),
-		MyWnds::MainWndProc_hwnd, HMENU(registerButtonID), MyWnds::hInstance, NULL
-	);
-	SendMessage(GetDlgItem(MyWnds::MainWndProc_hwnd, registerButtonID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
+	MyWnds::createLoginConfirmButton();
+	MyWnds::createRegisterButton();
+	MyWnds::createUserNameEdit_Static();
+	MyWnds::createPasswdEdit_Static();
 	//更改窗口风格与标记
 	MyWnds::mainWndStyle = LoginUI;
 	MyWnds::mainWndFlag = LoginUI;
@@ -67,42 +52,21 @@ void Door::LoginConfirm() {
 	//重绘整个窗口
 	InvalidateRect(MyWnds::MainWndProc_hwnd, NULL, TRUE);
 	SendMessage(MyWnds::MainWndProc_hwnd, WM_PAINT, NULL, NULL);
+	//创建主页
 	MyWnds::HomePage();
+	MyWnds::createHomePageButton();
+	MyWnds::createActInfoButton();
+	MyWnds::createDevInfoButton();
+	MyWnds::createTradeInfoButton();
+	MyWnds::createExitButton();
 }
 
 void Door::Register() {
-	//销毁控件
-	DestroyWindow(GetDlgItem(MyWnds::MainWndProc_hwnd, loginConfirmButtonID));
-	DestroyWindow(GetDlgItem(MyWnds::MainWndProc_hwnd, registerButtonID));
-	//创建登录按钮
-	CreateWindowEx(
-		0, WC_BUTTON, _T("已有账号？点此登录"), WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-		int(0.27 * MyWnds::defMainWndWidth), int(0.55 * MyWnds::defMainWndHeight), int(0.15 * MyWnds::defMainWndWidth), int(0.15 * MyWnds::defMainWndHeight),
-		MyWnds::MainWndProc_hwnd, HMENU(loginButtonID), MyWnds::hInstance, NULL
-	);
-	SendMessage(GetDlgItem(MyWnds::MainWndProc_hwnd, loginButtonID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
-	//创建注册按钮
-	CreateWindowEx(
-		0, WC_BUTTON, _T("注册"), WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-		int(0.52 * MyWnds::defMainWndWidth), int(0.55 * MyWnds::defMainWndHeight), int(0.15 * MyWnds::defMainWndWidth), int(0.15 * MyWnds::defMainWndHeight),
-		MyWnds::MainWndProc_hwnd, HMENU(registerConfirmButtonID), MyWnds::hInstance, NULL
-	);
-	SendMessage(GetDlgItem(MyWnds::MainWndProc_hwnd, registerConfirmButtonID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
-	//创建用户昵称输入框
-	CreateWindowEx(
-		0, WC_STATIC, _T("昵称"), WS_CHILD | WS_VISIBLE | SS_SIMPLE,
-		int(0.285 * MyWnds::defMainWndWidth), int(0.21 * MyWnds::defMainWndHeight), int(0.05 * MyWnds::defMainWndWidth), int(0.03 * MyWnds::defMainWndHeight),
-		MyWnds::MainWndProc_hwnd, HMENU(actNameStaticID), MyWnds::hInstance, NULL
-	);
-	SendMessage(GetDlgItem(MyWnds::MainWndProc_hwnd, actNameStaticID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
-	CreateWindowEx(
-		WS_EX_CLIENTEDGE, WC_EDIT, _T(""), WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL,
-		int(0.33 * MyWnds::defMainWndWidth), int(0.2 * MyWnds::defMainWndHeight), int(0.31 * MyWnds::defMainWndWidth), int(0.05 * MyWnds::defMainWndHeight),
-		MyWnds::MainWndProc_hwnd, HMENU(actNameEditID), MyWnds::hInstance, NULL
-	);
-	Edit_SetCueBannerText(GetDlgItem(MyWnds::MainWndProc_hwnd, actNameEditID), _T("请输入用户昵称"));//设置编辑控件中的文本提示
-	Edit_LimitText(GetDlgItem(MyWnds::MainWndProc_hwnd, actNameEditID), actName - 1); //限制可在编辑控件中输入的用户名的长度
-	SendMessage(GetDlgItem(MyWnds::MainWndProc_hwnd, actNameEditID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
+	MyWnds::createLoginButton();
+	MyWnds::createRegisterConfirmButton();
+	MyWnds::createActNameEdit_Static();
+	MyWnds::createUserNameEdit_Static();
+	MyWnds::createPasswdEdit_Static();
 	//更改窗口风格与标记
 	MyWnds::mainWndStyle = RegisterUI;
 	MyWnds::mainWndFlag = RegisterUI;
@@ -162,4 +126,11 @@ void Door::RegisterConfirm() {
 	//重绘整个窗口
 	InvalidateRect(MyWnds::MainWndProc_hwnd, NULL, TRUE);
 	SendMessage(MyWnds::MainWndProc_hwnd, WM_PAINT, NULL, NULL);
+	//创建主页
+	MyWnds::HomePage();
+	MyWnds::createHomePageButton();
+	MyWnds::createActInfoButton();
+	MyWnds::createDevInfoButton();
+	MyWnds::createTradeInfoButton();
+	MyWnds::createExitButton();
 }
