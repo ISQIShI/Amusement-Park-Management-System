@@ -14,9 +14,9 @@ private:
 	UINT mCharge;
 	//增加设备的时间
 	Time mAddTime;
+public:
 	//设备的总个数
 	static UINT mCount;
-public:
 	//增加设备
 	void DevAdd();
 	//修改设备信息

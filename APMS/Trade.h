@@ -12,9 +12,9 @@ private:
 	TCHAR mDevID[devID];
 	//交易时间
 	Time mTime;
+public:
 	//交易记录总个数
 	static UINT mCount;
-public:
 	//增加交易记录
 	void TradeAdd();
 	//修改交易记录

@@ -12,9 +12,9 @@ private:
 	TCHAR mContent[notContent];
 	//公告的发布时间
 	Time mPostTime;
+public:
 	//公告的总个数
 	static UINT mCount;
-public:
 	//增加公告
 	void NotAdd();
 	//修改公告

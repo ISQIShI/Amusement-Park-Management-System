@@ -31,6 +31,7 @@ void Door::LoginConfirm() {
 		ReadFile(tempHANDLE, &tempAct, sizeof(Account), &tempDWORD, NULL);//读取文件
 		if (!_tcscmp(tempAct.mUserName,tempUserName) && !_tcscmp(tempAct.mPasswd,tempPasswd)) {
 			tempFlag = 1;//匹配成功
+			MyWnds::currentPer = tempAct.mPer.mAdmin;
 			break;
 		}
 	} while (tempDWORD);
@@ -46,12 +47,6 @@ void Door::LoginConfirm() {
 	DestroyWindow(GetDlgItem(MyWnds::MainWndProc_hwnd, userNameEditID));
 	DestroyWindow(GetDlgItem(MyWnds::MainWndProc_hwnd, passwdStaticID));
 	DestroyWindow(GetDlgItem(MyWnds::MainWndProc_hwnd, passwdEditID));
-	//更改窗口风格与标记
-	MyWnds::mainWndStyle = HomeUI;
-	MyWnds::mainWndFlag = HomeUI;
-	//重绘整个窗口
-	InvalidateRect(MyWnds::MainWndProc_hwnd, NULL, TRUE);
-	SendMessage(MyWnds::MainWndProc_hwnd, WM_PAINT, NULL, NULL);
 	//创建主页
 	MyWnds::HomePage();
 	MyWnds::createHomePageButton();
@@ -59,6 +54,12 @@ void Door::LoginConfirm() {
 	MyWnds::createDevInfoButton();
 	MyWnds::createTradeInfoButton();
 	MyWnds::createExitButton();
+	//更改窗口风格与标记
+	MyWnds::mainWndStyle = HomeUI;
+	MyWnds::mainWndFlag = HomeUI;
+	//重绘整个窗口
+	InvalidateRect(MyWnds::MainWndProc_hwnd, NULL, TRUE);
+	SendMessage(MyWnds::MainWndProc_hwnd, WM_PAINT, NULL, NULL);
 }
 
 void Door::Register() {
@@ -101,7 +102,8 @@ void Door::RegisterConfirm() {
 	}
 	tempHANDLE = CreateFile(_T("Account.dat"), GENERIC_WRITE, NULL, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 	SetFilePointer(tempHANDLE, 0, NULL, FILE_END);
-	writeAct.mPer.mAdmin = 0;
+	writeAct.mPer.mAdmin = normalPer;
+	MyWnds::currentPer = writeAct.mPer.mAdmin;
 	writeAct.mCredit = 0;
 	//获取系统时间
 	SYSTEMTIME sysTime;
@@ -109,7 +111,8 @@ void Door::RegisterConfirm() {
 	_stprintf_s(writeAct.mRegTime.mDate, _T("%04d-%02d-%02d"), sysTime.wYear, sysTime.wMonth, sysTime.wDay);
 	_stprintf_s(writeAct.mRegTime.mMoment, _T("%02d:%02d:%02d"), sysTime.wHour, sysTime.wMinute, sysTime.wSecond);
 	++Account::mCount;
-	WriteFile(tempHANDLE,&writeAct ,sizeof(Account), NULL, NULL);
+	DWORD written;
+	WriteFile(tempHANDLE,&writeAct ,sizeof(Account), &written, NULL);
 	CloseHandle(tempHANDLE);//关闭文件
 	//销毁控件
 	DestroyWindow(GetDlgItem(MyWnds::MainWndProc_hwnd, loginButtonID));
@@ -120,12 +123,6 @@ void Door::RegisterConfirm() {
 	DestroyWindow(GetDlgItem(MyWnds::MainWndProc_hwnd, userNameEditID));
 	DestroyWindow(GetDlgItem(MyWnds::MainWndProc_hwnd, passwdStaticID));
 	DestroyWindow(GetDlgItem(MyWnds::MainWndProc_hwnd, passwdEditID));
-	//更改窗口风格与标记
-	MyWnds::mainWndStyle = HomeUI;
-	MyWnds::mainWndFlag = HomeUI;
-	//重绘整个窗口
-	InvalidateRect(MyWnds::MainWndProc_hwnd, NULL, TRUE);
-	SendMessage(MyWnds::MainWndProc_hwnd, WM_PAINT, NULL, NULL);
 	//创建主页
 	MyWnds::HomePage();
 	MyWnds::createHomePageButton();
@@ -133,4 +130,10 @@ void Door::RegisterConfirm() {
 	MyWnds::createDevInfoButton();
 	MyWnds::createTradeInfoButton();
 	MyWnds::createExitButton();
+	//更改窗口风格与标记
+	MyWnds::mainWndStyle = HomeUI;
+	MyWnds::mainWndFlag = HomeUI;
+	//重绘整个窗口
+	InvalidateRect(MyWnds::MainWndProc_hwnd, NULL, TRUE);
+	SendMessage(MyWnds::MainWndProc_hwnd, WM_PAINT, NULL, NULL);
 }

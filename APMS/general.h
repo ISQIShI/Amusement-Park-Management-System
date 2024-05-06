@@ -7,6 +7,11 @@
 #include<thread>
 using namespace std; 
 
+//用户操作权限
+#define normalPer 0//普通用户
+#define superPer 255//最高权限
+
+//各字符串变量的长度
 //Time
 #define timeDate 11
 #define timeMoment 9

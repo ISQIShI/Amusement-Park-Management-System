@@ -10,9 +10,9 @@ private:
 	UINT mMoney;
 	//充值时间
 	Time mTime;
+public:
 	//充值记录总个数
 	static UINT mCount;
-public:
 	void RechargeAdd();
 	void RechargeModify();
 	void RechargeDelete();
