@@ -1,5 +1,4 @@
 #pragma once
-#include"general.h"
 #include"Time.h"
 
 class Trade {

@@ -3,9 +3,6 @@
 #include<windowsx.h>
 #include<tchar.h>
 #include<CommCtrl.h>
-#include<iostream>
-#include<thread>
-using namespace std; 
 
 //用户操作权限
 #define normalPer 0//普通用户

@@ -1,11 +1,7 @@
 #pragma once
 #include"general.h"
-#include"Door.h"
 #include"Account.h"
-#include"Device.h"
-#include"Trade.h"
-#include"Recharge.h"
-#include"Notification.h"
+
 //编译器使用Win XP的新式控件风格
 #pragma comment(linker,"\"/manifestdependency:type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
 
@@ -33,6 +29,10 @@
 #define userNameStaticID 301//用户名
 #define passwdStaticID 302//密码
 #define actNameStaticID 303//昵称
+//SysLink
+#define editActNameSysLinkID 401//编辑用户昵称
+#define editPasswdSysLinkID 402//修改密码
+#define creditSysLinkID 403//充值/提现
 
 //UI界面
 #define LoginUI 1
@@ -65,6 +65,10 @@ public:
 	static int defMainWndWidth;
 	//主窗口默认高度
 	static int defMainWndHeight;
+
+	static int homePageWidth;
+	static int homePageHeight;
+
 	//存放设备环境句柄
 	static HDC hDC;
 	//默认画刷
@@ -82,8 +86,8 @@ public:
 	static BYTE mainWndStyle;
 	//作为窗口界面的标记
 	static BYTE mainWndFlag;
-	//当前用户操作权限
-	static BYTE currentPer;
+	//当前用户
+	static Account currentAct;
 
 	//主窗口过程的参数
 	static HWND MainWndProc_hwnd;
@@ -147,6 +151,9 @@ public:
 
 	//用户信息
 	static LRESULT CALLBACK ActInfoProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+	static void ActInfoProc_WM_NOTIFY();
+	static void ActInfoProc_WM_PAINT();
+	static void ActInfoProc_WM_CREATE();
 	static void ActInfo();
 
 	//设备信息

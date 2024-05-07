@@ -2,6 +2,7 @@
 #include"general.h"
 #include"Time.h"
 
+
 class Device {
 private:
 	//…Ë±∏ID

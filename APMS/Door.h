@@ -1,5 +1,4 @@
 #pragma once
-#include"general.h"
 
 class Door {
 public:

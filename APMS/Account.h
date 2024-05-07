@@ -1,7 +1,6 @@
 #pragma once
-#include"general.h"
-#include"Time.h"
 #include"Permission.h"
+#include"Time.h"
 
 class Account {
 public:
