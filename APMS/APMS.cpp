@@ -1,6 +1,4 @@
-#include<Windows.h>
 #include"MyWnds.h"
-#include <tchar.h>
 
 int WINAPI _tWinMain(_In_ HINSTANCE _hInstance, _In_opt_ HINSTANCE hPreInstance, _In_ LPTSTR lpCmdLine, _In_ INT nShowCmd)
 {

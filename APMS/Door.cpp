@@ -19,7 +19,7 @@ void Door::Login() {
 void Door::LoginConfirm() {
 	bool tempFlag = 0;//设定临时标记
 	Account tempAct;//存放将要读取的用户数据
-	DWORD tempDWORD;//存放实际读取的字节数
+	DWORD tempDWORD = 0;//存放实际读取的字节数
 	TCHAR tempUserName[actUserName] = _T(""), tempPasswd[actPasswd] = _T("");//接收用户输入的用户名和密码
 	Edit_GetText(GetDlgItem(MyWnds::MainWndProc_hwnd, userNameEditID), tempUserName, actUserName);//获取用户输入的用户名
 	Edit_GetText(GetDlgItem(MyWnds::MainWndProc_hwnd, passwdEditID), tempPasswd, actPasswd);//获取用户输入的密码
@@ -27,7 +27,7 @@ void Door::LoginConfirm() {
 		MessageBox(MyWnds::MainWndProc_hwnd, _T("您的输入无效，请重新输入"), _T("错误"), MB_OK | MB_ICONERROR);
 		return;
 	}
-	HANDLE tempHANDLE = CreateFile(_T("Account.dat"), GENERIC_READ, NULL, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);//打开文件
+	HANDLE tempHANDLE = CreateFile(_T("Account.dat"), GENERIC_READ, NULL, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);//打开文件
 	do{
 		ReadFile(tempHANDLE, &tempAct, sizeof(Account), &tempDWORD, NULL);//读取文件
 		if (!_tcscmp(tempAct.mUserName,tempUserName) && !_tcscmp(tempAct.mPasswd,tempPasswd)) {
@@ -80,7 +80,7 @@ void Door::Register() {
 void Door::RegisterConfirm() {
 	bool tempFlag = 0;//设定临时标记
 	Account tempAct;//存放将要读取的用户数据
-	DWORD tempDWORD;//存放实际读取的字节数
+	DWORD tempDWORD = 0;//存放实际读取的字节数
 	Edit_GetText(GetDlgItem(MyWnds::MainWndProc_hwnd, actNameEditID), MyWnds::currentAct.mName, actName);//获取用户输入的昵称
 	Edit_GetText(GetDlgItem(MyWnds::MainWndProc_hwnd, userNameEditID), MyWnds::currentAct.mUserName, actUserName);//获取用户输入的用户名
 	Edit_GetText(GetDlgItem(MyWnds::MainWndProc_hwnd, passwdEditID), MyWnds::currentAct.mPasswd, actPasswd);//获取用户输入的密码
@@ -88,7 +88,7 @@ void Door::RegisterConfirm() {
 		MessageBox(MyWnds::MainWndProc_hwnd, _T("您的输入无效，请重新输入"), _T("错误"), MB_OK | MB_ICONERROR);
 		return;
 	}
-	HANDLE tempHANDLE = CreateFile(_T("Account.dat"), GENERIC_READ, NULL, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);//打开文件
+	HANDLE tempHANDLE = CreateFile(_T("Account.dat"), GENERIC_READ, NULL, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);//打开文件
 	do {
 		ReadFile(tempHANDLE, &tempAct, sizeof(Account), &tempDWORD, NULL);//读取文件
 		if (!_tcscmp(tempAct.mUserName, MyWnds::currentAct.mUserName)) {
@@ -102,7 +102,9 @@ void Door::RegisterConfirm() {
 		return;
 	}
 	tempHANDLE = CreateFile(_T("Account.dat"), GENERIC_WRITE, NULL, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-	SetFilePointer(tempHANDLE, 0, NULL, FILE_END);
+	LARGE_INTEGER tempL_I;
+	tempL_I.QuadPart = 0;
+	SetFilePointerEx(tempHANDLE,tempL_I , NULL, FILE_END);
 	MyWnds::currentAct.mPer.mAdmin = normalPer;
 	MyWnds::currentAct.mCredit = 0;
 	//获取系统时间

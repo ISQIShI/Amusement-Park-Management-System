@@ -19,12 +19,15 @@
 #define homePageButtonID 105//主页按钮
 #define actInfoButtonID 106//用户信息按钮
 #define devInfoButtonID 107//设备信息按钮
-#define tradeInfoButtonID 108//交易记录按钮（需要权限）
+#define tradeInfoButtonID 108//交易记录按钮
 #define exitButtonID 109//退出系统
 //编辑框
 #define userNameEditID 201//用户名
 #define passwdEditID 202//密码
 #define actNameEditID 203//用户昵称
+#define editActInfoEditID 204//编辑用户信息
+
+
 //静态文本
 #define userNameStaticID 301//用户名
 #define passwdStaticID 302//密码
@@ -33,6 +36,10 @@
 #define editActNameSysLinkID 401//编辑用户昵称
 #define editPasswdSysLinkID 402//修改密码
 #define creditSysLinkID 403//充值/提现
+#define saveSysLinkID 404//保存
+#define browseActSysLinkID 405//查看所有用户（需要权限）
+#define actReturnSysLinkID 406//返回
+
 
 //UI界面
 #define LoginUI 1
@@ -129,6 +136,12 @@ public:
 	static void MainWndProc_WM_COMMAND();
 	static void MainWndProc_WM_WINDOWPOSCHANGING();
 	static void MainWndProc_WM_WINDOWPOSCHANGED();
+	static void adaptiveWndLoginUI(BYTE tempFontFlag);
+	static void adaptiveWndRegisterUI(BYTE tempFontFlag);
+	static void adaptiveWndHomeUI(BYTE tempFontFlag);
+	static void adaptiveWndActInfoUI(BYTE tempFontFlag);
+	static void adaptiveWndDevInfoUI(BYTE tempFontFlag);
+	static void adaptiveWndTradeInfoUI(BYTE tempFontFlag);
 	static void MainWndProc_WM_CLOSE();
 	static void MainWndProc_WM_DESTROY();
 	static LRESULT MainWndProc_WM_CTLCOLORSTATIC();
@@ -150,6 +163,7 @@ public:
 	static void HomePage();
 
 	//用户信息
+	static BYTE actInfoSysLinkFlag;
 	static LRESULT CALLBACK ActInfoProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 	static void ActInfoProc_WM_NOTIFY();
 	static void ActInfoProc_WM_PAINT();
