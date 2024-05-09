@@ -18,7 +18,7 @@ void Door::Login() {
 
 void Door::LoginConfirm() {
 	bool tempFlag = 0;//设定临时标记
-	Account tempAct;//存放将要读取的用户数据
+	Account tempAct = {0};//存放将要读取的用户数据
 	DWORD tempDWORD = 0;//存放实际读取的字节数
 	TCHAR tempUserName[actUserName] = _T(""), tempPasswd[actPasswd] = _T("");//接收用户输入的用户名和密码
 	Edit_GetText(GetDlgItem(MyWnds::MainWndProc_hwnd, userNameEditID), tempUserName, actUserName);//获取用户输入的用户名
@@ -27,16 +27,13 @@ void Door::LoginConfirm() {
 		MessageBox(MyWnds::MainWndProc_hwnd, _T("您的输入无效，请重新输入"), _T("错误"), MB_OK | MB_ICONERROR);
 		return;
 	}
-	HANDLE tempHANDLE = CreateFile(_T("Account.dat"), GENERIC_READ, NULL, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);//打开文件
-	do{
-		ReadFile(tempHANDLE, &tempAct, sizeof(Account), &tempDWORD, NULL);//读取文件
-		if (!_tcscmp(tempAct.mUserName,tempUserName) && !_tcscmp(tempAct.mPasswd,tempPasswd)) {
+	//检查用户名与密码
+	if (Account::ActSearch(tempUserName, &tempAct)) {
+		if (!_tcscmp(tempAct.mPasswd, tempPasswd)) {
 			tempFlag = 1;//匹配成功
 			MyWnds::currentAct = tempAct;
-			break;
 		}
-	} while (tempDWORD);
-	CloseHandle(tempHANDLE);//关闭文件
+	}
 	if (!tempFlag) {
 		MessageBox(MyWnds::MainWndProc_hwnd, _T("您输入的用户名或密码错误，请重新输入"), _T("错误"), MB_OK | MB_ICONERROR);
 		return;
@@ -78,7 +75,6 @@ void Door::Register() {
 }
 
 void Door::RegisterConfirm() {
-	bool tempFlag = 0;//设定临时标记
 	Account tempAct;//存放将要读取的用户数据
 	DWORD tempDWORD = 0;//存放实际读取的字节数
 	Edit_GetText(GetDlgItem(MyWnds::MainWndProc_hwnd, actNameEditID), MyWnds::currentAct.mName, actName);//获取用户输入的昵称
@@ -88,34 +84,22 @@ void Door::RegisterConfirm() {
 		MessageBox(MyWnds::MainWndProc_hwnd, _T("您的输入无效，请重新输入"), _T("错误"), MB_OK | MB_ICONERROR);
 		return;
 	}
-	HANDLE tempHANDLE = CreateFile(_T("Account.dat"), GENERIC_READ, NULL, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);//打开文件
-	do {
-		ReadFile(tempHANDLE, &tempAct, sizeof(Account), &tempDWORD, NULL);//读取文件
-		if (!_tcscmp(tempAct.mUserName, MyWnds::currentAct.mUserName)) {
-			tempFlag = 1;//匹配成功
-			break;
-		}
-	} while (tempDWORD);
-	CloseHandle(tempHANDLE);//关闭文件
-	if (tempFlag) {
+	//检查输入的用户名是否已存在
+	if (Account::ActSearch(MyWnds::currentAct.mUserName)) {
 		MessageBox(MyWnds::MainWndProc_hwnd, _T("您输入的用户名已存在，请重新输入"), _T("错误"), MB_OK | MB_ICONERROR);
 		return;
 	}
-	tempHANDLE = CreateFile(_T("Account.dat"), GENERIC_WRITE, NULL, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-	LARGE_INTEGER tempL_I;
-	tempL_I.QuadPart = 0;
-	SetFilePointerEx(tempHANDLE,tempL_I , NULL, FILE_END);
+	//设定普通权限
 	MyWnds::currentAct.mPer.mAdmin = normalPer;
+	//设定初始余额为0
 	MyWnds::currentAct.mCredit = 0;
-	//获取系统时间
+	//获取系统时间&设定注册时间
 	SYSTEMTIME sysTime;
 	GetLocalTime(&sysTime);
 	_stprintf_s(MyWnds::currentAct.mRegTime.mDate, _T("%04d-%02d-%02d"), sysTime.wYear, sysTime.wMonth, sysTime.wDay);
 	_stprintf_s(MyWnds::currentAct.mRegTime.mMoment, _T("%02d:%02d:%02d"), sysTime.wHour, sysTime.wMinute, sysTime.wSecond);
-	++Account::mCount;
-	DWORD written;
-	WriteFile(tempHANDLE,&MyWnds::currentAct ,sizeof(Account), &written, NULL);
-	CloseHandle(tempHANDLE);//关闭文件
+	//调用函数创建用户
+	Account::ActAdd(MyWnds::currentAct);
 	//销毁控件
 	DestroyWindow(GetDlgItem(MyWnds::MainWndProc_hwnd, loginButtonID));
 	DestroyWindow(GetDlgItem(MyWnds::MainWndProc_hwnd, registerConfirmButtonID));

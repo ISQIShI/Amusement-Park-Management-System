@@ -26,7 +26,7 @@ BYTE MyWnds::fontFlag;
 
 BYTE MyWnds::mainWndStyle = LoginUI;
 BYTE MyWnds::mainWndFlag = LoginUI;
-Account MyWnds::currentAct;
+Account MyWnds::currentAct = {0};
 
 HWND MyWnds::MainWndProc_hwnd;
 UINT MyWnds::MainWndProc_uMsg;
@@ -403,6 +403,7 @@ void MyWnds::adaptiveWndActInfoUI(BYTE tempFontFlag) {
 			SendMessage(GetDlgItem(MyWnds::ActInfoProc_hwnd, editActNameSysLinkID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
 			SendMessage(GetDlgItem(MyWnds::ActInfoProc_hwnd, editPasswdSysLinkID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
 			SendMessage(GetDlgItem(MyWnds::ActInfoProc_hwnd, creditSysLinkID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
+			SendMessage(GetDlgItem(MyWnds::ActInfoProc_hwnd, logoutSysLinkID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
 			if(currentAct.mPer.mAdmin)SendMessage(GetDlgItem(MyWnds::ActInfoProc_hwnd, browseActSysLinkID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
 		}
 		else if (MyWnds::actInfoSysLinkFlag == 1|| MyWnds::actInfoSysLinkFlag == 2) {
@@ -411,6 +412,8 @@ void MyWnds::adaptiveWndActInfoUI(BYTE tempFontFlag) {
 		}
 		else if (MyWnds::actInfoSysLinkFlag == 4) {
 			SendMessage(GetDlgItem(MyWnds::ActInfoProc_hwnd, actReturnSysLinkID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
+			SendMessage(GetDlgItem(MyWnds::ActInfoProc_hwnd, actInfoListID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
+			SendMessage(GetDlgItem(MyWnds::ActInfoProc_hwnd, actInfoSysLinkID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
 		}
 		//重绘整个窗口
 		InvalidateRect(MyWnds::MyWnds::MainWndProc_hwnd, NULL, TRUE);
@@ -423,22 +426,25 @@ void MyWnds::adaptiveWndActInfoUI(BYTE tempFontFlag) {
 	MoveWindow(GetDlgItem(MyWnds::MainWndProc_hwnd, exitButtonID), int(homePageButtonCoord_X * MyWnds::defMainWndWidth), int((homePageButtonCoord_Y + 0.6) * MyWnds::defMainWndHeight), int(homePageButtonWidth * MyWnds::defMainWndWidth), int(homePageButtonHeight * MyWnds::defMainWndHeight), true);
 	MoveWindow(GetDlgItem(MyWnds::MainWndProc_hwnd, actInfoWndID), int((homePageButtonWidth + homePageButtonCoord_X * 2) * MyWnds::defMainWndWidth), int(homePageButtonCoord_Y / 2.0 * MyWnds::defMainWndHeight), MyWnds::homePageWidth, MyWnds::homePageHeight, true);
 	if (MyWnds::actInfoSysLinkFlag == 0) {
-		MoveWindow(GetDlgItem(MyWnds::ActInfoProc_hwnd, editActNameSysLinkID), int(0.5 * MyWnds::homePageWidth), int(0.15 * MyWnds::homePageHeight), int(0.1 * MyWnds::homePageWidth), int(0.1 * MyWnds::homePageHeight), true);
-		MoveWindow(GetDlgItem(MyWnds::ActInfoProc_hwnd, editPasswdSysLinkID), int(0.49 * MyWnds::homePageWidth), int(0.45 * MyWnds::homePageHeight), int(0.15 * MyWnds::homePageWidth), int(0.1 * MyWnds::homePageHeight), true);
-		MoveWindow(GetDlgItem(MyWnds::ActInfoProc_hwnd, creditSysLinkID), int(0.48 * MyWnds::homePageWidth), int(0.75 * MyWnds::homePageHeight), int(0.15 * MyWnds::homePageWidth), int(0.1 * MyWnds::homePageHeight), true);
+		MoveWindow(GetDlgItem(MyWnds::ActInfoProc_hwnd, editActNameSysLinkID), int(0.5 * MyWnds::homePageWidth), int(0.15 * MyWnds::homePageHeight), int(0.1 * MyWnds::homePageWidth), int(0.05 * MyWnds::homePageHeight), true);
+		MoveWindow(GetDlgItem(MyWnds::ActInfoProc_hwnd, editPasswdSysLinkID), int(0.49 * MyWnds::homePageWidth), int(0.45 * MyWnds::homePageHeight), int(0.15 * MyWnds::homePageWidth), int(0.05 * MyWnds::homePageHeight), true);
+		MoveWindow(GetDlgItem(MyWnds::ActInfoProc_hwnd, creditSysLinkID), int(0.48 * MyWnds::homePageWidth), int(0.75 * MyWnds::homePageHeight), int(0.15 * MyWnds::homePageWidth), int(0.05 * MyWnds::homePageHeight), true);
+		MoveWindow(GetDlgItem(MyWnds::ActInfoProc_hwnd, logoutSysLinkID), int(0.49 * MyWnds::homePageWidth), int(0.9 * MyWnds::homePageHeight), int(0.15 * MyWnds::homePageWidth), int(0.05 * MyWnds::homePageHeight), true);
 		if (currentAct.mPer.mAdmin)
-		MoveWindow(GetDlgItem(MyWnds::ActInfoProc_hwnd, browseActSysLinkID), int(0.1 * MyWnds::homePageWidth), int(0.05 * MyWnds::homePageHeight), int(0.3 * MyWnds::homePageWidth), int(0.1 * MyWnds::homePageHeight), true);
+		MoveWindow(GetDlgItem(MyWnds::ActInfoProc_hwnd, browseActSysLinkID), int(0.1 * MyWnds::homePageWidth), int(0.05 * MyWnds::homePageHeight), int(0.3 * MyWnds::homePageWidth), int(0.05 * MyWnds::homePageHeight), true);
 	}
 	else if (MyWnds::actInfoSysLinkFlag == 1) {
 		MoveWindow(GetDlgItem(MyWnds::ActInfoProc_hwnd, editActInfoEditID), int(0.2 * MyWnds::homePageWidth), int(0.14 * MyWnds::homePageHeight), int(0.25 * MyWnds::homePageWidth), int(0.05 * MyWnds::homePageHeight), TRUE);
-		MoveWindow(GetDlgItem(MyWnds::ActInfoProc_hwnd, saveSysLinkID), int(0.5 * MyWnds::homePageWidth), int(0.15 * MyWnds::homePageHeight), int(0.1 * MyWnds::homePageWidth), int(0.1 * MyWnds::homePageHeight), TRUE);
+		MoveWindow(GetDlgItem(MyWnds::ActInfoProc_hwnd, saveSysLinkID), int(0.5 * MyWnds::homePageWidth), int(0.15 * MyWnds::homePageHeight), int(0.1 * MyWnds::homePageWidth), int(0.05 * MyWnds::homePageHeight), TRUE);
 	}
 	else if (MyWnds::actInfoSysLinkFlag == 2) {
 		MoveWindow(GetDlgItem(MyWnds::ActInfoProc_hwnd, editActInfoEditID), int(0.15 * MyWnds::homePageWidth), int(0.44 * MyWnds::homePageHeight), int(0.25 * MyWnds::homePageWidth), int(0.05 * MyWnds::homePageHeight), TRUE);
-		MoveWindow(GetDlgItem(MyWnds::ActInfoProc_hwnd, saveSysLinkID), int(0.5 * MyWnds::homePageWidth), int(0.45 * MyWnds::homePageHeight), int(0.1 * MyWnds::homePageWidth), int(0.1 * MyWnds::homePageHeight), TRUE);
+		MoveWindow(GetDlgItem(MyWnds::ActInfoProc_hwnd, saveSysLinkID), int(0.5 * MyWnds::homePageWidth), int(0.45 * MyWnds::homePageHeight), int(0.1 * MyWnds::homePageWidth), int(0.05 * MyWnds::homePageHeight), TRUE);
 	}
 	else if (MyWnds::actInfoSysLinkFlag == 4) {
-		MoveWindow(GetDlgItem(MyWnds::ActInfoProc_hwnd, actReturnSysLinkID), int(0.1 * MyWnds::homePageWidth), int(0.05 * MyWnds::homePageHeight), int(0.1 * MyWnds::homePageWidth), int(0.1 * MyWnds::homePageHeight), true);
+		MoveWindow(GetDlgItem(MyWnds::ActInfoProc_hwnd, actReturnSysLinkID), int(0.1 * MyWnds::homePageWidth), int(0.05 * MyWnds::homePageHeight), int(0.1 * MyWnds::homePageWidth), int(0.05 * MyWnds::homePageHeight), true);
+		MoveWindow(GetDlgItem(MyWnds::ActInfoProc_hwnd, actInfoListID), int(0.05 * MyWnds::homePageWidth), int(0.1 * MyWnds::homePageHeight), int(0.9 * MyWnds::homePageWidth), int(0.85 * MyWnds::homePageHeight), true);
+		MoveWindow(GetDlgItem(MyWnds::ActInfoProc_hwnd, actInfoSysLinkID), int(0.8 * MyWnds::homePageWidth), int(0.05 * MyWnds::homePageHeight), int(0.2 * MyWnds::homePageWidth), int(0.05 * MyWnds::homePageHeight), true);
 	}
 
 }
@@ -690,18 +696,24 @@ LRESULT CALLBACK MyWnds::ActInfoProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
 void MyWnds::ActInfoProc_WM_NOTIFY() {
 	switch (((LPNMHDR)MyWnds::ActInfoProc_lParam)->code)
 	{
-	case NM_CLICK:case NM_RETURN:
+	case NM_CLICK:case NM_RETURN://单击
 	{
 		switch (LPNMHDR(MyWnds::ActInfoProc_lParam)->idFrom) {
+		case actInfoListID:
+		{
+
+		}
+		break;
 		case actReturnSysLinkID:
 		{
 			DestroyWindow(GetDlgItem(MyWnds::ActInfoProc_hwnd, actReturnSysLinkID));
+			DestroyWindow(GetDlgItem(MyWnds::ActInfoProc_hwnd, actInfoListID));
+			DestroyWindow(GetDlgItem(MyWnds::ActInfoProc_hwnd, actInfoSysLinkID));
 			SendMessage(GetDlgItem(MyWnds::MainWndProc_hwnd, actInfoWndID), WM_CREATE, NULL, NULL);
 			MyWnds::actInfoSysLinkFlag = 0;
 			//重绘整个窗口
 			InvalidateRect(MyWnds::MyWnds::ActInfoProc_hwnd, NULL, TRUE);
 			SendMessage(MyWnds::MyWnds::ActInfoProc_hwnd, WM_PAINT, NULL, NULL);
-
 		}
 		break;
 		case browseActSysLinkID:
@@ -709,17 +721,148 @@ void MyWnds::ActInfoProc_WM_NOTIFY() {
 			DestroyWindow(GetDlgItem(MyWnds::ActInfoProc_hwnd, editActNameSysLinkID));
 			DestroyWindow(GetDlgItem(MyWnds::ActInfoProc_hwnd, editPasswdSysLinkID));
 			DestroyWindow(GetDlgItem(MyWnds::ActInfoProc_hwnd, creditSysLinkID));
+			DestroyWindow(GetDlgItem(MyWnds::ActInfoProc_hwnd, logoutSysLinkID));
 			DestroyWindow(GetDlgItem(MyWnds::ActInfoProc_hwnd, browseActSysLinkID));
+			//返回
 			CreateWindowEx(
-					0, _T("SysLink"), _T("<A HREF=\"返回\"> 返回 </A>"), WS_CHILD | WS_VISIBLE | LWS_TRANSPARENT,
-					int(0.1 * MyWnds::homePageWidth), int(0.05 * MyWnds::homePageHeight), int(0.1 * MyWnds::homePageWidth), int(0.1 * MyWnds::homePageHeight),
+					0, _T("SysLink"), _T("<A HREF=\"返回\">返回</A>"), WS_CHILD | WS_VISIBLE | LWS_TRANSPARENT,
+					int(0.1 * MyWnds::homePageWidth), int(0.05 * MyWnds::homePageHeight), int(0.1 * MyWnds::homePageWidth), int(0.05 * MyWnds::homePageHeight),
 					MyWnds::ActInfoProc_hwnd, HMENU(actReturnSysLinkID), MyWnds::hInstance, NULL
 				);
 			SendMessage(GetDlgItem(MyWnds::ActInfoProc_hwnd, actReturnSysLinkID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
+			//更改用户信息
+			CreateWindowEx(
+				0, _T("SysLink"), _T("<A HREF=\"添加\">添加</A>")\
+				_T(" <A HREF=\"修改\">修改</A>")\
+				_T(" <A HREF=\"删除\">删除</A>"),
+				WS_CHILD | WS_VISIBLE | LWS_TRANSPARENT,
+				int(0.8 * MyWnds::homePageWidth), int(0.05 * MyWnds::homePageHeight), int(0.2 * MyWnds::homePageWidth), int(0.05 * MyWnds::homePageHeight),
+				MyWnds::ActInfoProc_hwnd, HMENU(actInfoSysLinkID), MyWnds::hInstance, NULL
+			);
+			SendMessage(GetDlgItem(MyWnds::ActInfoProc_hwnd, actInfoSysLinkID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
+			//用户信息列表
+			CreateWindowEx(
+				0, WC_LISTVIEW, _T(""), WS_CHILD | WS_VISIBLE | WS_BORDER | WS_VSCROLL | WS_HSCROLL |LVS_REPORT | LVS_SHOWSELALWAYS,
+				int(0.05 * MyWnds::homePageWidth), int(0.1 * MyWnds::homePageHeight), int(0.9 * MyWnds::homePageWidth), int(0.85 * MyWnds::homePageHeight),
+				MyWnds::ActInfoProc_hwnd, (HMENU)actInfoListID, MyWnds::hInstance, NULL
+			);
+			SendMessage(GetDlgItem(MyWnds::ActInfoProc_hwnd, actInfoListID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
+			ListView_SetExtendedListViewStyle(GetDlgItem(MyWnds::ActInfoProc_hwnd, actInfoListID),  LVS_EX_COLUMNSNAPPOINTS |LVS_EX_CHECKBOXES| LVS_EX_FULLROWSELECT| LVS_EX_GRIDLINES);
+			//插入列
+			LVCOLUMN temp = { 0 };
+			temp.mask = LVCF_TEXT | LVCF_FMT| LVCF_WIDTH| LVCF_MINWIDTH | LVCF_SUBITEM;
+			temp.fmt = LVCFMT_CENTER;
+			temp.cx = int(0.07 * MyWnds::homePageWidth);
+			temp.pszText = (LPTSTR)_T("序号");
+			temp.iSubItem = 0;
+			temp.cxMin = int(0.07 * MyWnds::homePageWidth);
+			ListView_InsertColumn(GetDlgItem(MyWnds::ActInfoProc_hwnd, actInfoListID), 0, &temp);
+
+			temp.cx = int(0.16 * MyWnds::homePageWidth);
+			temp.pszText = (LPTSTR)_T("用户昵称");
+			temp.iSubItem = 1;
+			temp.cxMin = int(0.16 * MyWnds::homePageWidth);
+			ListView_InsertColumn(GetDlgItem(MyWnds::ActInfoProc_hwnd, actInfoListID), 1, &temp);
+
+			temp.cx = int(0.15 * MyWnds::homePageWidth);
+			temp.pszText = (LPTSTR)_T("用户名");
+			temp.iSubItem = 2;
+			temp.cxMin = int(0.15 * MyWnds::homePageWidth);
+			ListView_InsertColumn(GetDlgItem(MyWnds::ActInfoProc_hwnd, actInfoListID), 2, &temp);
+
+			temp.cx = int(0.15 * MyWnds::homePageWidth);
+			temp.pszText = (LPTSTR)_T("密码");
+			temp.iSubItem = 3;
+			temp.cxMin = int(0.15 * MyWnds::homePageWidth);
+			ListView_InsertColumn(GetDlgItem(MyWnds::ActInfoProc_hwnd, actInfoListID), 3, &temp);
+
+
+			temp.cx = int(0.06 * MyWnds::homePageWidth);
+			temp.pszText = (LPTSTR)_T("权限");
+			temp.iSubItem = 4;
+			temp.cxMin = int(0.06
+				* MyWnds::homePageWidth);
+			ListView_InsertColumn(GetDlgItem(MyWnds::ActInfoProc_hwnd, actInfoListID), 4, &temp);
+
+			temp.cx = int(0.1 * MyWnds::homePageWidth);
+			temp.pszText = (LPTSTR)_T("余额");
+			temp.iSubItem = 5;
+			temp.cxMin = int(0.1 * MyWnds::homePageWidth);
+			ListView_InsertColumn(GetDlgItem(MyWnds::ActInfoProc_hwnd, actInfoListID), 5, &temp);
+
+			temp.cx = int(0.2 * MyWnds::homePageWidth);
+			temp.pszText = (LPTSTR)_T("注册时间");
+			temp.iSubItem = 6;
+			temp.cxMin = int(0.2 * MyWnds::homePageWidth);
+			ListView_InsertColumn(GetDlgItem(MyWnds::ActInfoProc_hwnd, actInfoListID), 6, &temp);
+			//插入行
+			Account tempAct;//存放将要读取的用户数据
+			DWORD tempDWORD = 0;//存放实际读取的字节数
+			TCHAR tempTCHAR[30];
+			LVITEM tempINSERT = { 0 };
+			HANDLE tempHANDLE = CreateFile(_T("Account.dat"), GENERIC_READ , NULL, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+			for (int x = 0; true;++x) {
+				ReadFile(tempHANDLE, &tempAct, sizeof(Account), &tempDWORD, NULL);//读取文件
+				if (!tempDWORD)break;
+				tempINSERT.mask = LVIF_TEXT;
+				tempINSERT.iItem = x;
+				tempINSERT.iSubItem = 0;
+				_stprintf_s(tempTCHAR, _T("%d"), x+1);
+				tempINSERT.pszText = tempTCHAR;
+				ListView_InsertItem(GetDlgItem(MyWnds::ActInfoProc_hwnd, actInfoListID), &tempINSERT);
+
+				++tempINSERT.iSubItem;
+				tempINSERT.pszText = tempAct.mName;
+				ListView_SetItem(GetDlgItem(MyWnds::ActInfoProc_hwnd, actInfoListID), &tempINSERT);
+
+				++tempINSERT.iSubItem;
+				tempINSERT.pszText = tempAct.mUserName;
+				ListView_SetItem(GetDlgItem(MyWnds::ActInfoProc_hwnd, actInfoListID), &tempINSERT);
+
+				++tempINSERT.iSubItem;
+				tempINSERT.pszText = tempAct.mPasswd;
+				ListView_SetItem(GetDlgItem(MyWnds::ActInfoProc_hwnd, actInfoListID), &tempINSERT);
+
+				++tempINSERT.iSubItem;
+				_stprintf_s(tempTCHAR, _T("%d"), tempAct.mPer.mAdmin);
+				tempINSERT.pszText = tempTCHAR;
+				ListView_SetItem(GetDlgItem(MyWnds::ActInfoProc_hwnd, actInfoListID), &tempINSERT);
+
+				++tempINSERT.iSubItem;
+				_stprintf_s(tempTCHAR, _T("%d"), tempAct.mCredit);
+				tempINSERT.pszText = tempTCHAR;
+				ListView_SetItem(GetDlgItem(MyWnds::ActInfoProc_hwnd, actInfoListID), &tempINSERT);
+
+				++tempINSERT.iSubItem;
+				_stprintf_s(tempTCHAR, tempAct.mRegTime.mDate);
+				wcscat_s(tempTCHAR, _T(" "));
+				wcscat_s(tempTCHAR, tempAct.mRegTime.mMoment);
+				tempINSERT.pszText = tempTCHAR;
+				ListView_SetItem(GetDlgItem(MyWnds::ActInfoProc_hwnd, actInfoListID), &tempINSERT);
+
+			}
+			CloseHandle(tempHANDLE);//关闭文件
+
 			MyWnds::actInfoSysLinkFlag = 4;
 			//重绘整个窗口
 			InvalidateRect(MyWnds::MyWnds::ActInfoProc_hwnd, NULL, TRUE);
 			SendMessage(MyWnds::MyWnds::ActInfoProc_hwnd, WM_PAINT, NULL, NULL);
+		}
+		break;
+		case actInfoSysLinkID:
+		{
+			if (PNMLINK(MyWnds::ActInfoProc_lParam)->item.iLink == 0)//增加
+			{
+
+			}
+			else if (PNMLINK(MyWnds::ActInfoProc_lParam)->item.iLink == 1)//修改
+			{
+
+			}
+			else if (PNMLINK(MyWnds::ActInfoProc_lParam)->item.iLink == 2)//删除
+			{
+
+			}
 		}
 		break;
 		case saveSysLinkID: 
@@ -727,43 +870,31 @@ void MyWnds::ActInfoProc_WM_NOTIFY() {
 			TCHAR tempTCHAR[(actName>actPasswd)?actName:actPasswd];
 			Edit_GetText(GetDlgItem(MyWnds::ActInfoProc_hwnd, editActInfoEditID), tempTCHAR, 1 + GetWindowTextLength(GetDlgItem(MyWnds::ActInfoProc_hwnd, editActInfoEditID)));//获取用户输入的昵称
 			if (*tempTCHAR) {
-				DWORD written;
-				Account tempAct;//存放将要读取的用户数据
-				DWORD tempDWORD = 0;//存放实际读取的字节数
-				HANDLE tempHANDLE = CreateFile(_T("Account.dat"), GENERIC_READ |GENERIC_WRITE, NULL, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-				do {
-					ReadFile(tempHANDLE, &tempAct, sizeof(Account), &tempDWORD, NULL);//读取文件
-					if (!_tcscmp(tempAct.mUserName, MyWnds::currentAct.mUserName)) {
-						break;
-					}
-				} while (tempDWORD);
-				LARGE_INTEGER tempL_I;
-				tempL_I.QuadPart = - long long (sizeof(Account));
-				SetFilePointerEx(tempHANDLE, tempL_I, NULL, FILE_CURRENT);
 				if (MyWnds::actInfoSysLinkFlag == 1) {
-					_stprintf_s(currentAct.mName, tempTCHAR);
-					WriteFile(tempHANDLE, &MyWnds::currentAct, sizeof(Account), &written, NULL);
+					_stprintf_s(MyWnds::currentAct.mName, tempTCHAR);
 				}
 				else if (MyWnds::actInfoSysLinkFlag == 2) {
-					_stprintf_s(currentAct.mPasswd, tempTCHAR);
-					WriteFile(tempHANDLE, &MyWnds::currentAct, sizeof(Account), &written, NULL);
+					_stprintf_s(MyWnds::currentAct.mPasswd, tempTCHAR);
 				}
-				CloseHandle(tempHANDLE);//关闭文件
+				Account::ActModify(MyWnds::currentAct);
 				MyWnds::actInfoSysLinkFlag = 0;
 				DestroyWindow(GetDlgItem(MyWnds::ActInfoProc_hwnd, saveSysLinkID));
 				DestroyWindow(GetDlgItem(MyWnds::ActInfoProc_hwnd, editActInfoEditID));
 				SendMessage(GetDlgItem(MyWnds::ActInfoProc_hwnd, editActNameSysLinkID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
-				MoveWindow(GetDlgItem(MyWnds::ActInfoProc_hwnd, editActNameSysLinkID), int(0.5 * MyWnds::homePageWidth), int(0.15 * MyWnds::homePageHeight), int(0.1 * MyWnds::homePageWidth), int(0.1 * MyWnds::homePageHeight), true);
+				MoveWindow(GetDlgItem(MyWnds::ActInfoProc_hwnd, editActNameSysLinkID), int(0.5 * MyWnds::homePageWidth), int(0.15 * MyWnds::homePageHeight), int(0.1 * MyWnds::homePageWidth), int(0.05 * MyWnds::homePageHeight), true);
 				ShowWindow(GetDlgItem(MyWnds::ActInfoProc_hwnd, editActNameSysLinkID), SW_SHOW);
 				SendMessage(GetDlgItem(MyWnds::ActInfoProc_hwnd, editPasswdSysLinkID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
-				MoveWindow(GetDlgItem(MyWnds::ActInfoProc_hwnd, editPasswdSysLinkID), int(0.49 * MyWnds::homePageWidth), int(0.45 * MyWnds::homePageHeight), int(0.15 * MyWnds::homePageWidth), int(0.1 * MyWnds::homePageHeight), true);
+				MoveWindow(GetDlgItem(MyWnds::ActInfoProc_hwnd, editPasswdSysLinkID), int(0.49 * MyWnds::homePageWidth), int(0.45 * MyWnds::homePageHeight), int(0.15 * MyWnds::homePageWidth), int(0.05 * MyWnds::homePageHeight), true);
 				ShowWindow(GetDlgItem(MyWnds::ActInfoProc_hwnd, editPasswdSysLinkID), SW_SHOW);
 				SendMessage(GetDlgItem(MyWnds::ActInfoProc_hwnd, creditSysLinkID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
-				MoveWindow(GetDlgItem(MyWnds::ActInfoProc_hwnd, creditSysLinkID), int(0.48 * MyWnds::homePageWidth), int(0.75 * MyWnds::homePageHeight), int(0.15 * MyWnds::homePageWidth), int(0.1 * MyWnds::homePageHeight), true);
+				MoveWindow(GetDlgItem(MyWnds::ActInfoProc_hwnd, creditSysLinkID), int(0.48 * MyWnds::homePageWidth), int(0.75 * MyWnds::homePageHeight), int(0.15 * MyWnds::homePageWidth), int(0.05 * MyWnds::homePageHeight), true);
 				ShowWindow(GetDlgItem(MyWnds::ActInfoProc_hwnd, creditSysLinkID), SW_SHOW);
+				SendMessage(GetDlgItem(MyWnds::ActInfoProc_hwnd, logoutSysLinkID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
+				MoveWindow(GetDlgItem(MyWnds::ActInfoProc_hwnd, logoutSysLinkID), int(0.49 * MyWnds::homePageWidth), int(0.9 * MyWnds::homePageHeight), int(0.15 * MyWnds::homePageWidth), int(0.05 * MyWnds::homePageHeight), true);
+				ShowWindow(GetDlgItem(MyWnds::ActInfoProc_hwnd, logoutSysLinkID), SW_SHOW);
 				if (currentAct.mPer.mAdmin) {
 					SendMessage(GetDlgItem(MyWnds::ActInfoProc_hwnd, browseActSysLinkID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
-					MoveWindow(GetDlgItem(MyWnds::ActInfoProc_hwnd, browseActSysLinkID), int(0.1 * MyWnds::homePageWidth), int(0.05 * MyWnds::homePageHeight), int(0.3 * MyWnds::homePageWidth), int(0.1 * MyWnds::homePageHeight), true);
+					MoveWindow(GetDlgItem(MyWnds::ActInfoProc_hwnd, browseActSysLinkID), int(0.1 * MyWnds::homePageWidth), int(0.05 * MyWnds::homePageHeight), int(0.3 * MyWnds::homePageWidth), int(0.05 * MyWnds::homePageHeight), true);
 					ShowWindow(GetDlgItem(MyWnds::ActInfoProc_hwnd, browseActSysLinkID), SW_SHOW);
 				}
 				//重绘整个窗口
@@ -780,11 +911,12 @@ void MyWnds::ActInfoProc_WM_NOTIFY() {
 			ShowWindow(GetDlgItem(MyWnds::ActInfoProc_hwnd, editActNameSysLinkID), SW_HIDE);
 			ShowWindow(GetDlgItem(MyWnds::ActInfoProc_hwnd, editPasswdSysLinkID), SW_HIDE);
 			ShowWindow(GetDlgItem(MyWnds::ActInfoProc_hwnd, creditSysLinkID), SW_HIDE);
+			ShowWindow(GetDlgItem(MyWnds::ActInfoProc_hwnd, logoutSysLinkID), SW_HIDE);
 			if (currentAct.mPer.mAdmin)ShowWindow(GetDlgItem(MyWnds::ActInfoProc_hwnd, browseActSysLinkID), SW_HIDE);
 			//保存
 			CreateWindowEx(
-				0, _T("SysLink"), _T("<A HREF=\"保存\"> 保存 </A>"), WS_CHILD | WS_VISIBLE | LWS_TRANSPARENT,
-				int(0.5 * MyWnds::homePageWidth), int(0.15 * MyWnds::homePageHeight), int(0.1 * MyWnds::homePageWidth), int(0.1 * MyWnds::homePageHeight),
+				0, _T("SysLink"), _T("<A HREF=\"保存\">保存</A>"), WS_CHILD | WS_VISIBLE | LWS_TRANSPARENT,
+				int(0.5 * MyWnds::homePageWidth), int(0.15 * MyWnds::homePageHeight), int(0.1 * MyWnds::homePageWidth), int(0.05 * MyWnds::homePageHeight),
 				MyWnds::ActInfoProc_hwnd, HMENU(saveSysLinkID), MyWnds::hInstance, NULL
 			);
 			SendMessage(GetDlgItem(MyWnds::ActInfoProc_hwnd, saveSysLinkID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
@@ -808,11 +940,12 @@ void MyWnds::ActInfoProc_WM_NOTIFY() {
 			ShowWindow(GetDlgItem(MyWnds::ActInfoProc_hwnd, editActNameSysLinkID), SW_HIDE);
 			ShowWindow(GetDlgItem(MyWnds::ActInfoProc_hwnd, editPasswdSysLinkID), SW_HIDE);
 			ShowWindow(GetDlgItem(MyWnds::ActInfoProc_hwnd, creditSysLinkID), SW_HIDE);
+			ShowWindow(GetDlgItem(MyWnds::ActInfoProc_hwnd, logoutSysLinkID), SW_HIDE);
 			if(currentAct.mPer.mAdmin)ShowWindow(GetDlgItem(MyWnds::ActInfoProc_hwnd, browseActSysLinkID), SW_HIDE);
 			//保存
 			CreateWindowEx(
-				0, _T("SysLink"), _T("<A HREF=\"保存\"> 保存 </A>"), WS_CHILD | WS_VISIBLE | LWS_TRANSPARENT,
-				int(0.5 * MyWnds::homePageWidth), int(0.45 * MyWnds::homePageHeight), int(0.1 * MyWnds::homePageWidth), int(0.1 * MyWnds::homePageHeight),
+				0, _T("SysLink"), _T("<A HREF=\"保存\">保存</A>"), WS_CHILD | WS_VISIBLE | LWS_TRANSPARENT,
+				int(0.5 * MyWnds::homePageWidth), int(0.45 * MyWnds::homePageHeight), int(0.1 * MyWnds::homePageWidth), int(0.05 * MyWnds::homePageHeight),
 				MyWnds::ActInfoProc_hwnd, HMENU(saveSysLinkID), MyWnds::hInstance, NULL
 			);
 			SendMessage(GetDlgItem(MyWnds::ActInfoProc_hwnd, saveSysLinkID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
@@ -839,6 +972,43 @@ void MyWnds::ActInfoProc_WM_NOTIFY() {
 			{
 				MessageBox(MyWnds::ActInfoProc_hwnd, _T("没有做这个功能嘞╮（╯＿╰）╭\n便于后续扩展(如果是真的软件的话)"), _T("维护"), MB_OK | MB_ICONERROR);
 			}
+		}
+		break;
+		case logoutSysLinkID:
+		{
+			if (MessageBox(MyWnds::ActInfoProc_hwnd, _T("您确定注销用户吗？\n请注意此操作不可撤回！！！"), _T("警告"), MB_OKCANCEL | MB_ICONWARNING) == IDOK)
+			{
+				Account::ActDelete(currentAct.mUserName);
+				MyWnds::DestroyChildWnd();
+				DestroyWindow(GetDlgItem(MyWnds::MainWndProc_hwnd, homePageButtonID));
+				DestroyWindow(GetDlgItem(MyWnds::MainWndProc_hwnd, actInfoButtonID));
+				DestroyWindow(GetDlgItem(MyWnds::MainWndProc_hwnd, devInfoButtonID));
+				DestroyWindow(GetDlgItem(MyWnds::MainWndProc_hwnd, tradeInfoButtonID));
+				DestroyWindow(GetDlgItem(MyWnds::MainWndProc_hwnd, exitButtonID));
+				Door::Login();
+			}
+		}
+		break;
+		}
+	}
+	break;
+	case NM_DBLCLK://双击
+	{
+		switch (LPNMHDR(MyWnds::ActInfoProc_lParam)->idFrom) {
+		case actInfoListID:
+		{
+
+		}
+		break;
+		}
+	}
+	break;
+	case NM_RCLICK://右击
+	{
+		switch (LPNMHDR(MyWnds::ActInfoProc_lParam)->idFrom) {
+		case actInfoListID:
+		{
+
 		}
 		break;
 		}
@@ -877,31 +1047,38 @@ void MyWnds::ActInfoProc_WM_PAINT() {
 void MyWnds::ActInfoProc_WM_CREATE() {
 	//编辑用户昵称
 	CreateWindowEx(
-		0, _T("SysLink"), _T("<A HREF=\"编辑\"> 编辑 </A>"), WS_CHILD | WS_VISIBLE | LWS_TRANSPARENT,
-		int(0.5 * MyWnds::homePageWidth), int(0.15 * MyWnds::homePageHeight), int(0.1 * MyWnds::homePageWidth), int(0.1 * MyWnds::homePageHeight),
+		0, _T("SysLink"), _T("<A HREF=\"编辑\">编辑</A>"), WS_CHILD | WS_VISIBLE | LWS_TRANSPARENT,
+		int(0.5 * MyWnds::homePageWidth), int(0.15 * MyWnds::homePageHeight), int(0.1 * MyWnds::homePageWidth), int(0.05 * MyWnds::homePageHeight),
 		MyWnds::ActInfoProc_hwnd, HMENU(editActNameSysLinkID), MyWnds::hInstance, NULL
 	);
 	SendMessage(GetDlgItem(MyWnds::ActInfoProc_hwnd, editActNameSysLinkID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
 	//更改密码
 	CreateWindowEx(
-		0, _T("SysLink"), _T("<A HREF=\"更改密码\"> 更改密码 </A>"), WS_CHILD | WS_VISIBLE | LWS_TRANSPARENT,
-		int(0.49 * MyWnds::homePageWidth), int(0.45 * MyWnds::homePageHeight), int(0.15 * MyWnds::homePageWidth), int(0.1 * MyWnds::homePageHeight),
+		0, _T("SysLink"), _T("<A HREF=\"更改密码\">更改密码</A>"), WS_CHILD | WS_VISIBLE | LWS_TRANSPARENT,
+		int(0.49 * MyWnds::homePageWidth), int(0.45 * MyWnds::homePageHeight), int(0.15 * MyWnds::homePageWidth), int(0.05 * MyWnds::homePageHeight),
 		MyWnds::ActInfoProc_hwnd, HMENU(editPasswdSysLinkID), MyWnds::hInstance, NULL
 	);
 	SendMessage(GetDlgItem(MyWnds::ActInfoProc_hwnd, editPasswdSysLinkID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
 	//充值/提现
 	CreateWindowEx(
-		0, _T("SysLink"), _T("<A HREF=\"充值\"> 充值 </A>")\
+		0, _T("SysLink"), _T("<A HREF=\"充值\">充值</A>")\
 		_T("|<A HREF=\"提现\"> 提现 </A>"), WS_CHILD | WS_VISIBLE | LWS_TRANSPARENT,
-		int(0.48 * MyWnds::homePageWidth), int(0.75 * MyWnds::homePageHeight), int(0.15 * MyWnds::homePageWidth), int(0.1 * MyWnds::homePageHeight),
+		int(0.48 * MyWnds::homePageWidth), int(0.75 * MyWnds::homePageHeight), int(0.15 * MyWnds::homePageWidth), int(0.05 * MyWnds::homePageHeight),
 		MyWnds::ActInfoProc_hwnd, HMENU(creditSysLinkID), MyWnds::hInstance, NULL
 	);
 	SendMessage(GetDlgItem(MyWnds::ActInfoProc_hwnd, creditSysLinkID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
+	//注销用户
+	CreateWindowEx(
+		0, _T("SysLink"), _T("<A HREF=\"注销用户\">注销用户</A>"), WS_CHILD | WS_VISIBLE | LWS_TRANSPARENT,
+		int(0.49 * MyWnds::homePageWidth), int(0.9 * MyWnds::homePageHeight), int(0.15 * MyWnds::homePageWidth), int(0.05 * MyWnds::homePageHeight),
+		MyWnds::ActInfoProc_hwnd, HMENU(logoutSysLinkID), MyWnds::hInstance, NULL
+	);
+	SendMessage(GetDlgItem(MyWnds::ActInfoProc_hwnd, logoutSysLinkID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
 	//查看所有用户（需要权限）
 	if (currentAct.mPer.mAdmin) {
 		CreateWindowEx(
-			0, _T("SysLink"), _T("<A HREF=\"查看所有用户\"> 查看所有用户 </A>"), WS_CHILD | WS_VISIBLE | LWS_TRANSPARENT,
-			int(0.1 * MyWnds::homePageWidth), int(0.05 * MyWnds::homePageHeight), int(0.3 * MyWnds::homePageWidth), int(0.1 * MyWnds::homePageHeight),
+			0, _T("SysLink"), _T("<A HREF=\"查看所有用户\">查看所有用户</A>"), WS_CHILD | WS_VISIBLE | LWS_TRANSPARENT,
+			int(0.1 * MyWnds::homePageWidth), int(0.05 * MyWnds::homePageHeight), int(0.3 * MyWnds::homePageWidth), int(0.05 * MyWnds::homePageHeight),
 			MyWnds::ActInfoProc_hwnd, HMENU(browseActSysLinkID), MyWnds::hInstance, NULL
 		);
 		SendMessage(GetDlgItem(MyWnds::ActInfoProc_hwnd, browseActSysLinkID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);

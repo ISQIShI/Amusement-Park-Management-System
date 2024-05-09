@@ -26,8 +26,6 @@
 #define passwdEditID 202//密码
 #define actNameEditID 203//用户昵称
 #define editActInfoEditID 204//编辑用户信息
-
-
 //静态文本
 #define userNameStaticID 301//用户名
 #define passwdStaticID 302//密码
@@ -36,10 +34,14 @@
 #define editActNameSysLinkID 401//编辑用户昵称
 #define editPasswdSysLinkID 402//修改密码
 #define creditSysLinkID 403//充值/提现
-#define saveSysLinkID 404//保存
-#define browseActSysLinkID 405//查看所有用户（需要权限）
-#define actReturnSysLinkID 406//返回
+#define logoutSysLinkID 404//注销用户
+#define saveSysLinkID 405//保存
+#define browseActSysLinkID 406//查看所有用户（需要权限）
+#define actReturnSysLinkID 407//返回
+#define actInfoSysLinkID 408//更改用户信息
 
+//ListView
+#define actInfoListID 501//用户信息列表
 
 //UI界面
 #define LoginUI 1
