@@ -9,7 +9,7 @@ int WINAPI _tWinMain(_In_ HINSTANCE _hInstance, _In_opt_ HINSTANCE hPreInstance,
 	if (tempHANDLE != INVALID_HANDLE_VALUE) {
 		Account writeAct;
 		_stprintf_s(writeAct.mName , _T("超级管理员"));
-		_stprintf_s(writeAct.mUserName, _T("SuperAdmin"));
+		_stprintf_s(writeAct.mID, _T("SuperAdmin"));
 		_stprintf_s(writeAct.mPasswd, _T("SuperAdmin"));
 		writeAct.mPer.mAdmin = superPer;
 		writeAct.mCredit = 0;

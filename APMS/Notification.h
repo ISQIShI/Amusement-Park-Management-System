@@ -14,10 +14,4 @@ private:
 public:
 	//公告的总个数
 	static UINT mCount;
-	//增加公告
-	void NotAdd();
-	//修改公告
-	void NotModify();
-	//删除公告
-	void NotDelete();
 };

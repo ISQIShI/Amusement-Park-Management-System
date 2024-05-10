@@ -1,5 +1,6 @@
 #pragma once
 #include"general.h"
+#include <tchar.h>
 
 class Time {
 public:

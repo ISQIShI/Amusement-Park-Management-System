@@ -3,6 +3,8 @@
 
 class Recharge {
 private:
+	//充值ID
+	TCHAR mID[rechargeID];
 	//充值的用户名
 	TCHAR mUserName[actUserName];
 	//充值金额
@@ -12,7 +14,4 @@ private:
 public:
 	//充值记录总个数
 	static UINT mCount;
-	void RechargeAdd();
-	void RechargeModify();
-	void RechargeDelete();
 };

@@ -143,6 +143,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Account.h" />
+    <ClInclude Include="Data.hpp" />
     <ClInclude Include="Device.h" />
     <ClInclude Include="Door.h" />
     <ClInclude Include="general.h" />

@@ -1,6 +1,8 @@
 #pragma once
 #include"general.h"
 #include"Account.h"
+#include<Windows.h>
+#include<initializer_list>
 
 //编译器使用Win XP的新式控件风格
 #pragma comment(linker,"\"/manifestdependency:type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
@@ -129,7 +131,7 @@ public:
 	static LPARAM TradeInfoProc_lParam;
 
 	//获取各数据的个数
-	static void GetInfoCount();
+	static void GetDataCount();
 	//创建字体
 	static void CreateFont();
 
@@ -180,7 +182,7 @@ public:
 	static LRESULT CALLBACK TradeInfoProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 	static void TradeInfo();
 
-	//控件
+	//创建子控件
 	static void createLoginButton();
 	static void createLoginConfirmButton();
 	static void createRegisterButton();
@@ -194,4 +196,9 @@ public:
 	static void createUserNameEdit_Static();
 	static void createPasswdEdit_Static();
 	static void createActNameEdit_Static();
+
+	//快速连续销毁多个控件&子窗口
+	static void DestroyControl(HWND hWnd,const std::initializer_list<int>& controlID);
+	//快速连续给多个控件发送相同消息 (默认为设定字体的消息)
+	static void SendMessageToControl(HWND hWnd, const std::initializer_list<int>& controlID, UINT Msg = WM_SETFONT, WPARAM wParam = (WPARAM)MyWnds::currentHFONT, LPARAM lParam = TRUE);
 };

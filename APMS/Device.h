@@ -2,7 +2,6 @@
 #include"general.h"
 #include"Time.h"
 
-
 class Device {
 private:
 	//设备ID
@@ -18,10 +17,4 @@ private:
 public:
 	//设备的总个数
 	static UINT mCount;
-	//增加设备
-	void DevAdd();
-	//修改设备信息
-	void DevModify();
-	//删除设备
-	void DevDelete();
 };

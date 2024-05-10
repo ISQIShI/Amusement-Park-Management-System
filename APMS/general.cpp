@@ -1,5 +1,6 @@
 #include"general.h"
-
+#include<Windows.h>
+#include <tchar.h>
 
 //打开我的github项目页面
 void OpenMyGitHubProjectPage() {

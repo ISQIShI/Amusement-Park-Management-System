@@ -8,6 +8,4 @@ public:
 	//×¢²áÕË»§
 	static void Register();
 	static void RegisterConfirm();
-	//µÇ³öÕË»§
-	static void Exit();
 };

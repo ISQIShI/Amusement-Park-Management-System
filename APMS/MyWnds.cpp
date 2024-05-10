@@ -1,9 +1,14 @@
-#include"MyWnds.h"
+#include "MyWnds.h"
+#include "Data.hpp"
+#include "Door.h"
 #include "Device.h"
 #include "Trade.h"
 #include "Recharge.h"
 #include "Notification.h"
-#include "Door.h"
+#include <CommCtrl.h>
+#include <tchar.h>
+#include <windowsx.h>
+
 
 HINSTANCE MyWnds::hInstance;
 int MyWnds::defScreenWidth = GetSystemMetrics(SM_CXMAXIMIZED);
@@ -54,8 +59,8 @@ UINT MyWnds::TradeInfoProc_uMsg;
 WPARAM MyWnds::TradeInfoProc_wParam;
 LPARAM MyWnds::TradeInfoProc_lParam;
 
-
-void MyWnds::GetInfoCount() {
+//获取各数据记录个数
+void MyWnds::GetDataCount() {
 	LARGE_INTEGER temp;
 	HANDLE tempHANLDE;
 	//用户信息
@@ -100,6 +105,7 @@ void MyWnds::GetInfoCount() {
 	}
 }
 
+//创建字体
 void MyWnds::CreateFont() {
 	//创建默认字体
 	MyWnds::defLogFont.lfEscapement = 0;//转义向量与设备的 x 轴之间的角度（以十分之一度为单位）
@@ -160,7 +166,7 @@ LRESULT CALLBACK MyWnds::MainWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
 		break;
 	case WM_CREATE://创建窗口
 	{
-		MyWnds::GetInfoCount();
+		MyWnds::GetDataCount();
 		MyWnds::CreateFont();
 		if (MyWnds::defMainWndWidth < 1080 || MyWnds::defMainWndHeight < 608) { MyWnds::currentHFONT = MyWnds::defSmallHFont; MyWnds::fontFlag = defSmallFont; }
 		else if (MyWnds::defMainWndWidth < 1320 || MyWnds::defMainWndHeight < 743) { MyWnds::currentHFONT = MyWnds::defMidHFont; MyWnds::fontFlag = defMidFont; }
@@ -184,14 +190,7 @@ void MyWnds::MainWndProc_WM_COMMAND() {
 		switch (LOWORD(MyWnds::MainWndProc_wParam)) {
 		case loginButtonID: {
 			//销毁控件
-			DestroyWindow(GetDlgItem(MyWnds::MainWndProc_hwnd, loginButtonID));
-			DestroyWindow(GetDlgItem(MyWnds::MainWndProc_hwnd, registerConfirmButtonID));
-			DestroyWindow(GetDlgItem(MyWnds::MainWndProc_hwnd, actNameStaticID));
-			DestroyWindow(GetDlgItem(MyWnds::MainWndProc_hwnd, actNameEditID));
-			DestroyWindow(GetDlgItem(MyWnds::MainWndProc_hwnd, userNameStaticID));
-			DestroyWindow(GetDlgItem(MyWnds::MainWndProc_hwnd, userNameEditID));
-			DestroyWindow(GetDlgItem(MyWnds::MainWndProc_hwnd, passwdStaticID));
-			DestroyWindow(GetDlgItem(MyWnds::MainWndProc_hwnd, passwdEditID));
+			MyWnds::DestroyControl(MyWnds::MainWndProc_hwnd, { loginButtonID,registerConfirmButtonID,actNameStaticID,actNameEditID,userNameStaticID,userNameEditID,passwdStaticID,passwdEditID });
 			Door::Login();
 		}
 		break;
@@ -201,12 +200,7 @@ void MyWnds::MainWndProc_WM_COMMAND() {
 		break;
 		case registerButtonID: {
 			//销毁控件
-			DestroyWindow(GetDlgItem(MyWnds::MainWndProc_hwnd, loginConfirmButtonID));
-			DestroyWindow(GetDlgItem(MyWnds::MainWndProc_hwnd, registerButtonID));
-			DestroyWindow(GetDlgItem(MyWnds::MainWndProc_hwnd, userNameStaticID));
-			DestroyWindow(GetDlgItem(MyWnds::MainWndProc_hwnd, userNameEditID));
-			DestroyWindow(GetDlgItem(MyWnds::MainWndProc_hwnd, passwdStaticID));
-			DestroyWindow(GetDlgItem(MyWnds::MainWndProc_hwnd, passwdEditID));
+			MyWnds::DestroyControl(MyWnds::MainWndProc_hwnd, {loginConfirmButtonID,registerButtonID,userNameStaticID,userNameEditID,passwdStaticID,passwdEditID});
 			Door::Register();
 		}
 		break;
@@ -271,11 +265,7 @@ void MyWnds::MainWndProc_WM_COMMAND() {
 			}
 			else if (temp == IDNO) {
 				MyWnds::DestroyChildWnd();
-				DestroyWindow(GetDlgItem(MyWnds::MainWndProc_hwnd, homePageButtonID));
-				DestroyWindow(GetDlgItem(MyWnds::MainWndProc_hwnd, actInfoButtonID));
-				DestroyWindow(GetDlgItem(MyWnds::MainWndProc_hwnd, devInfoButtonID));
-				DestroyWindow(GetDlgItem(MyWnds::MainWndProc_hwnd, tradeInfoButtonID));
-				DestroyWindow(GetDlgItem(MyWnds::MainWndProc_hwnd, exitButtonID));
+				MyWnds::DestroyControl(MyWnds::MainWndProc_hwnd, {homePageButtonID,actInfoButtonID,devInfoButtonID,tradeInfoButtonID,exitButtonID});
 				Door::Login();
 			}
 		}
@@ -331,12 +321,7 @@ void MyWnds::MainWndProc_WM_WINDOWPOSCHANGED(){
 void MyWnds::adaptiveWndLoginUI(BYTE tempFontFlag) {
 	if (tempFontFlag != MyWnds::fontFlag) {
 		MyWnds::fontFlag = tempFontFlag;
-		SendMessage(GetDlgItem(MyWnds::MainWndProc_hwnd, loginConfirmButtonID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
-		SendMessage(GetDlgItem(MyWnds::MainWndProc_hwnd, registerButtonID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
-		SendMessage(GetDlgItem(MyWnds::MainWndProc_hwnd, userNameStaticID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
-		SendMessage(GetDlgItem(MyWnds::MainWndProc_hwnd, userNameEditID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
-		SendMessage(GetDlgItem(MyWnds::MainWndProc_hwnd, passwdStaticID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
-		SendMessage(GetDlgItem(MyWnds::MainWndProc_hwnd, passwdEditID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
+		MyWnds::SendMessageToControl(MyWnds::MainWndProc_hwnd, {loginConfirmButtonID,registerButtonID,userNameStaticID,userNameEditID,passwdStaticID,passwdEditID});
 		//重绘整个窗口
 		InvalidateRect(MyWnds::MainWndProc_hwnd, NULL, TRUE);
 		SendMessage(MyWnds::MainWndProc_hwnd, WM_PAINT, NULL, NULL);
@@ -351,14 +336,7 @@ void MyWnds::adaptiveWndLoginUI(BYTE tempFontFlag) {
 void MyWnds::adaptiveWndRegisterUI(BYTE tempFontFlag) {
 	if (tempFontFlag != MyWnds::fontFlag) {
 		MyWnds::fontFlag = tempFontFlag;
-		SendMessage(GetDlgItem(MyWnds::MainWndProc_hwnd, loginButtonID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
-		SendMessage(GetDlgItem(MyWnds::MainWndProc_hwnd, registerConfirmButtonID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
-		SendMessage(GetDlgItem(MyWnds::MainWndProc_hwnd, actNameStaticID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
-		SendMessage(GetDlgItem(MyWnds::MainWndProc_hwnd, actNameEditID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
-		SendMessage(GetDlgItem(MyWnds::MainWndProc_hwnd, userNameStaticID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
-		SendMessage(GetDlgItem(MyWnds::MainWndProc_hwnd, userNameEditID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
-		SendMessage(GetDlgItem(MyWnds::MainWndProc_hwnd, passwdStaticID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
-		SendMessage(GetDlgItem(MyWnds::MainWndProc_hwnd, passwdEditID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
+		MyWnds::SendMessageToControl(MyWnds::MainWndProc_hwnd, {loginButtonID,registerConfirmButtonID,actNameStaticID,actNameEditID,userNameStaticID,userNameEditID,passwdStaticID,passwdEditID});
 		//重绘整个窗口
 		InvalidateRect(MyWnds::MyWnds::MainWndProc_hwnd, NULL, TRUE);
 		SendMessage(MyWnds::MyWnds::MainWndProc_hwnd, WM_PAINT, NULL, NULL);
@@ -375,11 +353,7 @@ void MyWnds::adaptiveWndRegisterUI(BYTE tempFontFlag) {
 void MyWnds::adaptiveWndHomeUI(BYTE tempFontFlag) {
 	if (tempFontFlag != MyWnds::fontFlag) {
 		MyWnds::fontFlag = tempFontFlag;
-		SendMessage(GetDlgItem(MyWnds::MainWndProc_hwnd, homePageButtonID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
-		SendMessage(GetDlgItem(MyWnds::MainWndProc_hwnd, actInfoButtonID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
-		SendMessage(GetDlgItem(MyWnds::MainWndProc_hwnd, devInfoButtonID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
-		SendMessage(GetDlgItem(MyWnds::MainWndProc_hwnd, tradeInfoButtonID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
-		SendMessage(GetDlgItem(MyWnds::MainWndProc_hwnd, exitButtonID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
+		MyWnds::SendMessageToControl(MyWnds::MainWndProc_hwnd, {homePageButtonID,actInfoButtonID,devInfoButtonID,tradeInfoButtonID,exitButtonID});
 		//重绘整个窗口
 		InvalidateRect(MyWnds::MyWnds::MainWndProc_hwnd, NULL, TRUE);
 		SendMessage(MyWnds::MyWnds::MainWndProc_hwnd, WM_PAINT, NULL, NULL);
@@ -394,26 +368,16 @@ void MyWnds::adaptiveWndHomeUI(BYTE tempFontFlag) {
 void MyWnds::adaptiveWndActInfoUI(BYTE tempFontFlag) {
 	if (tempFontFlag != MyWnds::fontFlag) {
 		MyWnds::fontFlag = tempFontFlag;
-		SendMessage(GetDlgItem(MyWnds::MainWndProc_hwnd, homePageButtonID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
-		SendMessage(GetDlgItem(MyWnds::MainWndProc_hwnd, actInfoButtonID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
-		SendMessage(GetDlgItem(MyWnds::MainWndProc_hwnd, devInfoButtonID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
-		SendMessage(GetDlgItem(MyWnds::MainWndProc_hwnd, tradeInfoButtonID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
-		SendMessage(GetDlgItem(MyWnds::MainWndProc_hwnd, exitButtonID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
+		MyWnds::SendMessageToControl(MyWnds::MainWndProc_hwnd, {homePageButtonID,actInfoButtonID,devInfoButtonID,tradeInfoButtonID,exitButtonID});
 		if (MyWnds::actInfoSysLinkFlag == 0) {
-			SendMessage(GetDlgItem(MyWnds::ActInfoProc_hwnd, editActNameSysLinkID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
-			SendMessage(GetDlgItem(MyWnds::ActInfoProc_hwnd, editPasswdSysLinkID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
-			SendMessage(GetDlgItem(MyWnds::ActInfoProc_hwnd, creditSysLinkID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
-			SendMessage(GetDlgItem(MyWnds::ActInfoProc_hwnd, logoutSysLinkID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
+			MyWnds::SendMessageToControl(MyWnds::ActInfoProc_hwnd, {editActNameSysLinkID,editPasswdSysLinkID,creditSysLinkID,logoutSysLinkID});
 			if(currentAct.mPer.mAdmin)SendMessage(GetDlgItem(MyWnds::ActInfoProc_hwnd, browseActSysLinkID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
 		}
 		else if (MyWnds::actInfoSysLinkFlag == 1|| MyWnds::actInfoSysLinkFlag == 2) {
-			SendMessage(GetDlgItem(MyWnds::ActInfoProc_hwnd, editActInfoEditID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
-			SendMessage(GetDlgItem(MyWnds::ActInfoProc_hwnd, saveSysLinkID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
+			MyWnds::SendMessageToControl(MyWnds::ActInfoProc_hwnd, {editActInfoEditID,saveSysLinkID});
 		}
 		else if (MyWnds::actInfoSysLinkFlag == 4) {
-			SendMessage(GetDlgItem(MyWnds::ActInfoProc_hwnd, actReturnSysLinkID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
-			SendMessage(GetDlgItem(MyWnds::ActInfoProc_hwnd, actInfoListID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
-			SendMessage(GetDlgItem(MyWnds::ActInfoProc_hwnd, actInfoSysLinkID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
+			MyWnds::SendMessageToControl(MyWnds::ActInfoProc_hwnd, {actReturnSysLinkID,actInfoListID,actInfoSysLinkID});
 		}
 		//重绘整个窗口
 		InvalidateRect(MyWnds::MyWnds::MainWndProc_hwnd, NULL, TRUE);
@@ -451,11 +415,7 @@ void MyWnds::adaptiveWndActInfoUI(BYTE tempFontFlag) {
 void MyWnds::adaptiveWndDevInfoUI(BYTE tempFontFlag) {
 	if (tempFontFlag != MyWnds::fontFlag) {
 		MyWnds::fontFlag = tempFontFlag;
-		SendMessage(GetDlgItem(MyWnds::MainWndProc_hwnd, homePageButtonID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
-		SendMessage(GetDlgItem(MyWnds::MainWndProc_hwnd, actInfoButtonID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
-		SendMessage(GetDlgItem(MyWnds::MainWndProc_hwnd, devInfoButtonID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
-		SendMessage(GetDlgItem(MyWnds::MainWndProc_hwnd, tradeInfoButtonID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
-		SendMessage(GetDlgItem(MyWnds::MainWndProc_hwnd, exitButtonID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
+		MyWnds::SendMessageToControl(MyWnds::MainWndProc_hwnd, {homePageButtonID,actInfoButtonID,devInfoButtonID,tradeInfoButtonID,exitButtonID});
 		//重绘整个窗口
 		InvalidateRect(MyWnds::MyWnds::MainWndProc_hwnd, NULL, TRUE);
 		SendMessage(MyWnds::MyWnds::MainWndProc_hwnd, WM_PAINT, NULL, NULL);
@@ -470,11 +430,7 @@ void MyWnds::adaptiveWndDevInfoUI(BYTE tempFontFlag) {
 void MyWnds::adaptiveWndTradeInfoUI(BYTE tempFontFlag){
 	if (tempFontFlag != MyWnds::fontFlag) {
 		MyWnds::fontFlag = tempFontFlag;
-		SendMessage(GetDlgItem(MyWnds::MainWndProc_hwnd, homePageButtonID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
-		SendMessage(GetDlgItem(MyWnds::MainWndProc_hwnd, actInfoButtonID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
-		SendMessage(GetDlgItem(MyWnds::MainWndProc_hwnd, devInfoButtonID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
-		SendMessage(GetDlgItem(MyWnds::MainWndProc_hwnd, tradeInfoButtonID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
-		SendMessage(GetDlgItem(MyWnds::MainWndProc_hwnd, exitButtonID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
+		MyWnds::SendMessageToControl(MyWnds::MainWndProc_hwnd, {homePageButtonID,actInfoButtonID,devInfoButtonID,tradeInfoButtonID,exitButtonID});
 		//重绘整个窗口
 		InvalidateRect(MyWnds::MyWnds::MainWndProc_hwnd, NULL, TRUE);
 		SendMessage(MyWnds::MyWnds::MainWndProc_hwnd, WM_PAINT, NULL, NULL);
@@ -497,9 +453,11 @@ void MyWnds::MainWndProc_WM_CLOSE(){
 		DestroyWindow(MyWnds::MainWndProc_hwnd);//销毁窗口并发送WM_DESTROY消息
 	}
 }
+
 void MyWnds::MainWndProc_WM_DESTROY(){
 	PostQuitMessage(0);//发布WM_QUIT消息
 }
+
 LRESULT MyWnds::MainWndProc_WM_CTLCOLORSTATIC(){
 	MyWnds::hDC = (HDC)MyWnds::MainWndProc_wParam;
 	SetTextColor(MyWnds::hDC, RGB(0, 0, 0));//文字前景色
@@ -508,6 +466,7 @@ LRESULT MyWnds::MainWndProc_WM_CTLCOLORSTATIC(){
 	MyWnds::hDC = NULL;
 	return (INT_PTR)MyWnds::defHBrush;
 }
+
 void MyWnds::MainWndProc_WM_PAINT(){
 	switch (MyWnds::mainWndStyle) {
 	case LoginUI: case RegisterUI:
@@ -552,7 +511,6 @@ void MyWnds::MainWndProc_WM_PAINT(){
 	break;
 	}
 }
-
 
 WPARAM MyWnds::MainWnd() {
 	//实例化窗口类对象---主窗口
@@ -599,6 +557,7 @@ WPARAM MyWnds::MainWnd() {
 	return Msg.wParam;
 }
 
+//销毁子窗口
 void MyWnds::DestroyChildWnd() {
 	switch (MyWnds::mainWndFlag) {
 	case HomeUI: {
@@ -706,10 +665,11 @@ void MyWnds::ActInfoProc_WM_NOTIFY() {
 		break;
 		case actReturnSysLinkID:
 		{
-			DestroyWindow(GetDlgItem(MyWnds::ActInfoProc_hwnd, actReturnSysLinkID));
-			DestroyWindow(GetDlgItem(MyWnds::ActInfoProc_hwnd, actInfoListID));
-			DestroyWindow(GetDlgItem(MyWnds::ActInfoProc_hwnd, actInfoSysLinkID));
+			//销毁控件
+			MyWnds::DestroyControl(MyWnds::ActInfoProc_hwnd, {actReturnSysLinkID,actInfoListID,actInfoSysLinkID});
+			//创建控件
 			SendMessage(GetDlgItem(MyWnds::MainWndProc_hwnd, actInfoWndID), WM_CREATE, NULL, NULL);
+			//更改标记
 			MyWnds::actInfoSysLinkFlag = 0;
 			//重绘整个窗口
 			InvalidateRect(MyWnds::MyWnds::ActInfoProc_hwnd, NULL, TRUE);
@@ -718,11 +678,7 @@ void MyWnds::ActInfoProc_WM_NOTIFY() {
 		break;
 		case browseActSysLinkID:
 		{
-			DestroyWindow(GetDlgItem(MyWnds::ActInfoProc_hwnd, editActNameSysLinkID));
-			DestroyWindow(GetDlgItem(MyWnds::ActInfoProc_hwnd, editPasswdSysLinkID));
-			DestroyWindow(GetDlgItem(MyWnds::ActInfoProc_hwnd, creditSysLinkID));
-			DestroyWindow(GetDlgItem(MyWnds::ActInfoProc_hwnd, logoutSysLinkID));
-			DestroyWindow(GetDlgItem(MyWnds::ActInfoProc_hwnd, browseActSysLinkID));
+			MyWnds::DestroyControl(MyWnds::ActInfoProc_hwnd, {editActNameSysLinkID,editPasswdSysLinkID,creditSysLinkID,logoutSysLinkID,browseActSysLinkID});
 			//返回
 			CreateWindowEx(
 					0, _T("SysLink"), _T("<A HREF=\"返回\">返回</A>"), WS_CHILD | WS_VISIBLE | LWS_TRANSPARENT,
@@ -816,7 +772,7 @@ void MyWnds::ActInfoProc_WM_NOTIFY() {
 				ListView_SetItem(GetDlgItem(MyWnds::ActInfoProc_hwnd, actInfoListID), &tempINSERT);
 
 				++tempINSERT.iSubItem;
-				tempINSERT.pszText = tempAct.mUserName;
+				tempINSERT.pszText = tempAct.mID;
 				ListView_SetItem(GetDlgItem(MyWnds::ActInfoProc_hwnd, actInfoListID), &tempINSERT);
 
 				++tempINSERT.iSubItem;
@@ -876,7 +832,7 @@ void MyWnds::ActInfoProc_WM_NOTIFY() {
 				else if (MyWnds::actInfoSysLinkFlag == 2) {
 					_stprintf_s(MyWnds::currentAct.mPasswd, tempTCHAR);
 				}
-				Account::ActModify(MyWnds::currentAct);
+				Data<Account>::DataModify(_T("Account.dat"), MyWnds::currentAct);
 				MyWnds::actInfoSysLinkFlag = 0;
 				DestroyWindow(GetDlgItem(MyWnds::ActInfoProc_hwnd, saveSysLinkID));
 				DestroyWindow(GetDlgItem(MyWnds::ActInfoProc_hwnd, editActInfoEditID));
@@ -978,13 +934,9 @@ void MyWnds::ActInfoProc_WM_NOTIFY() {
 		{
 			if (MessageBox(MyWnds::ActInfoProc_hwnd, _T("您确定注销用户吗？\n请注意此操作不可撤回！！！"), _T("警告"), MB_OKCANCEL | MB_ICONWARNING) == IDOK)
 			{
-				Account::ActDelete(currentAct.mUserName);
+				Data<Account>::DataDelete(_T("Account.dat"), currentAct.mID);
 				MyWnds::DestroyChildWnd();
-				DestroyWindow(GetDlgItem(MyWnds::MainWndProc_hwnd, homePageButtonID));
-				DestroyWindow(GetDlgItem(MyWnds::MainWndProc_hwnd, actInfoButtonID));
-				DestroyWindow(GetDlgItem(MyWnds::MainWndProc_hwnd, devInfoButtonID));
-				DestroyWindow(GetDlgItem(MyWnds::MainWndProc_hwnd, tradeInfoButtonID));
-				DestroyWindow(GetDlgItem(MyWnds::MainWndProc_hwnd, exitButtonID));
+				MyWnds::DestroyControl(MyWnds::MainWndProc_hwnd, {homePageButtonID,actInfoButtonID,devInfoButtonID,tradeInfoButtonID,exitButtonID});
 				Door::Login();
 			}
 		}
@@ -1029,7 +981,7 @@ void MyWnds::ActInfoProc_WM_PAINT() {
 		if (actInfoSysLinkFlag == 1)_stprintf_s(tempTCHAR, _T("用户昵称："));
 		else _stprintf_s(tempTCHAR, _T("用户昵称：%s"), currentAct.mName);
 		TextOut(MyWnds::hDC, int(0.1 * homePageWidth), int(0.15 * homePageHeight), tempTCHAR, wcslen(tempTCHAR));
-		_stprintf_s(tempTCHAR, _T("用户名：%s"), currentAct.mUserName);
+		_stprintf_s(tempTCHAR, _T("用户名：%s"), currentAct.mID);
 		TextOut(MyWnds::hDC, int(0.1 * homePageWidth), int(0.3 * homePageHeight), tempTCHAR, wcslen(tempTCHAR));
 		_stprintf_s(tempTCHAR, _T("密码："));
 		TextOut(MyWnds::hDC, int(0.1 * homePageWidth), int(0.45 * homePageHeight), tempTCHAR, wcslen(tempTCHAR));
@@ -1220,9 +1172,8 @@ void MyWnds::TradeInfo() {
 }
 
 
-
+//创建登录按钮
 void MyWnds::createLoginButton(){
-	//创建登录按钮
 	CreateWindowEx(
 		0, WC_BUTTON, _T("已有账号？点此登录"), WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
 		int(0.27 * MyWnds::defMainWndWidth), int(0.55 * MyWnds::defMainWndHeight), int(0.15 * MyWnds::defMainWndWidth), int(0.15 * MyWnds::defMainWndHeight),
@@ -1230,8 +1181,8 @@ void MyWnds::createLoginButton(){
 	);
 	SendMessage(GetDlgItem(MyWnds::MainWndProc_hwnd, loginButtonID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
 }
+//创建登录确认按钮
 void MyWnds::createLoginConfirmButton() {
-	//创建登录确认按钮
 	CreateWindowEx(
 		0, WC_BUTTON, _T("登录"), WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
 		int(0.27 * MyWnds::MyWnds::defMainWndWidth), int(0.55 * MyWnds::defMainWndHeight), int(0.15 * MyWnds::defMainWndWidth), int(0.15 * MyWnds::defMainWndHeight),
@@ -1239,8 +1190,8 @@ void MyWnds::createLoginConfirmButton() {
 	);
 	SendMessage(GetDlgItem(MyWnds::MainWndProc_hwnd, loginConfirmButtonID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
 }
+//创建注册按钮
 void MyWnds::createRegisterButton(){
-	//创建注册按钮
 	CreateWindowEx(
 		0, WC_BUTTON, _T("没有账号？点此注册"), WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
 		int(0.52 * MyWnds::defMainWndWidth), int(0.55 * MyWnds::defMainWndHeight), int(0.15 * MyWnds::defMainWndWidth), int(0.15 * MyWnds::defMainWndHeight),
@@ -1248,8 +1199,8 @@ void MyWnds::createRegisterButton(){
 	);
 	SendMessage(GetDlgItem(MyWnds::MainWndProc_hwnd, registerButtonID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
 }
+//创建注册确认按钮
 void MyWnds::createRegisterConfirmButton(){
-	//创建注册确认按钮
 	CreateWindowEx(
 		0, WC_BUTTON, _T("注册"), WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
 		int(0.52 * MyWnds::defMainWndWidth), int(0.55 * MyWnds::defMainWndHeight), int(0.15 * MyWnds::defMainWndWidth), int(0.15 * MyWnds::defMainWndHeight),
@@ -1257,8 +1208,8 @@ void MyWnds::createRegisterConfirmButton(){
 	);
 	SendMessage(GetDlgItem(MyWnds::MainWndProc_hwnd, registerConfirmButtonID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
 }
+//创建主页按钮
 void MyWnds::createHomePageButton(){
-	//创建主页按钮
 	CreateWindowEx(
 		0, WC_BUTTON, _T("主页"), WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
 		int(homePageButtonCoord_X * MyWnds::MyWnds::defMainWndWidth), int(homePageButtonCoord_Y * MyWnds::defMainWndHeight), int(homePageButtonWidth * MyWnds::defMainWndWidth), int(homePageButtonHeight * MyWnds::defMainWndHeight),
@@ -1266,8 +1217,8 @@ void MyWnds::createHomePageButton(){
 	);
 	SendMessage(GetDlgItem(MyWnds::MainWndProc_hwnd, homePageButtonID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
 }
+//创建用户信息按钮
 void MyWnds::createActInfoButton(){
-	//创建用户信息按钮
 	CreateWindowEx(
 		0, WC_BUTTON, _T("用户信息"), WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
 		int(homePageButtonCoord_X * MyWnds::MyWnds::defMainWndWidth), int((homePageButtonCoord_Y + 0.15) * MyWnds::defMainWndHeight), int(homePageButtonWidth * MyWnds::defMainWndWidth), int(homePageButtonHeight * MyWnds::defMainWndHeight),
@@ -1275,8 +1226,8 @@ void MyWnds::createActInfoButton(){
 	);
 	SendMessage(GetDlgItem(MyWnds::MainWndProc_hwnd, actInfoButtonID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
 }
+//创建设备信息按钮
 void MyWnds::createDevInfoButton(){
-	//创建设备信息按钮
 	CreateWindowEx(
 		0, WC_BUTTON, _T("设备信息"), WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
 		int(homePageButtonCoord_X * MyWnds::MyWnds::defMainWndWidth), int((homePageButtonCoord_Y + 0.3) * MyWnds::defMainWndHeight), int(homePageButtonWidth * MyWnds::defMainWndWidth), int(homePageButtonHeight * MyWnds::defMainWndHeight),
@@ -1284,12 +1235,12 @@ void MyWnds::createDevInfoButton(){
 	);
 	SendMessage(GetDlgItem(MyWnds::MainWndProc_hwnd, devInfoButtonID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
 }
+//创建交易记录按钮
 void MyWnds::createTradeInfoButton(){
 	TCHAR tempTCHAR[5] = _T("消费记录");//普通用户显示消费记录
 	if (MyWnds::currentAct.mPer.mAdmin) {
 		_stprintf_s(tempTCHAR, _T("交易记录"));//有管理权限的用户显示交易记录
 	}
-	//创建交易记录按钮
 	CreateWindowEx(
 		0, WC_BUTTON, tempTCHAR , WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
 		int(homePageButtonCoord_X * MyWnds::MyWnds::defMainWndWidth), int((homePageButtonCoord_Y + 0.45) * MyWnds::defMainWndHeight), int(homePageButtonWidth * MyWnds::defMainWndWidth), int(homePageButtonHeight * MyWnds::defMainWndHeight),
@@ -1297,8 +1248,8 @@ void MyWnds::createTradeInfoButton(){
 	);
 	SendMessage(GetDlgItem(MyWnds::MainWndProc_hwnd, tradeInfoButtonID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
 }
+//创建退出系统按钮
 void MyWnds::createExitButton(){
-	//创建退出系统按钮
 	CreateWindowEx(
 		0, WC_BUTTON, _T("退出系统"), WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
 		int(homePageButtonCoord_X * MyWnds::MyWnds::defMainWndWidth), int((homePageButtonCoord_Y + 0.6) * MyWnds::defMainWndHeight), int(homePageButtonWidth * MyWnds::defMainWndWidth), int(homePageButtonHeight * MyWnds::defMainWndHeight),
@@ -1307,8 +1258,8 @@ void MyWnds::createExitButton(){
 	SendMessage(GetDlgItem(MyWnds::MainWndProc_hwnd, exitButtonID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
 }
 
+//创建用户名输入框
 void MyWnds::createUserNameEdit_Static(){
-	//创建用户名输入框
 	CreateWindowEx(
 		0, WC_STATIC, _T("用户名"), WS_CHILD | WS_VISIBLE | SS_SIMPLE,
 		int(0.28 * MyWnds::defMainWndWidth), int(0.31 * MyWnds::defMainWndHeight), int(0.05 * MyWnds::defMainWndWidth), int(0.03 * MyWnds::defMainWndHeight),
@@ -1324,8 +1275,8 @@ void MyWnds::createUserNameEdit_Static(){
 	Edit_LimitText(GetDlgItem(MyWnds::MainWndProc_hwnd, userNameEditID), actUserName - 1); //限制可在编辑控件中输入的用户名的长度
 	SendMessage(GetDlgItem(MyWnds::MainWndProc_hwnd, userNameEditID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
 }
+//创建密码输入框
 void MyWnds::createPasswdEdit_Static(){
-	//创建密码输入框
 	CreateWindowEx(
 		0, WC_STATIC, _T("密码"), WS_CHILD | WS_VISIBLE | SS_SIMPLE,
 		int(0.285 * MyWnds::defMainWndWidth), int(0.41 * MyWnds::defMainWndHeight), int(0.05 * MyWnds::defMainWndWidth), int(0.03 * MyWnds::defMainWndHeight),
@@ -1341,8 +1292,8 @@ void MyWnds::createPasswdEdit_Static(){
 	Edit_LimitText(GetDlgItem(MyWnds::MainWndProc_hwnd, passwdEditID), actPasswd - 1); //限制可在编辑控件中输入的密码的长度
 	SendMessage(GetDlgItem(MyWnds::MainWndProc_hwnd, passwdEditID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
 }
+//创建用户昵称输入框
 void MyWnds::createActNameEdit_Static(){
-	//创建用户昵称输入框
 	CreateWindowEx(
 		0, WC_STATIC, _T("昵称"), WS_CHILD | WS_VISIBLE | SS_SIMPLE,
 		int(0.285 * MyWnds::defMainWndWidth), int(0.21 * MyWnds::defMainWndHeight), int(0.05 * MyWnds::defMainWndWidth), int(0.03 * MyWnds::defMainWndHeight),
@@ -1357,4 +1308,17 @@ void MyWnds::createActNameEdit_Static(){
 	Edit_SetCueBannerText(GetDlgItem(MyWnds::MainWndProc_hwnd, actNameEditID), _T("请输入用户昵称"));//设置编辑控件中的文本提示
 	Edit_LimitText(GetDlgItem(MyWnds::MainWndProc_hwnd, actNameEditID), actName - 1); //限制可在编辑控件中输入的用户名的长度
 	SendMessage(GetDlgItem(MyWnds::MainWndProc_hwnd, actNameEditID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
+}
+
+//快速连续销毁多个控件&子窗口
+void MyWnds::DestroyControl(HWND hWnd,const std::initializer_list<int>& controlID) {
+	for (auto cID : controlID) {
+		DestroyWindow(GetDlgItem(hWnd, cID));
+	}
+}
+//快速连续给多个控件发送相同消息 (默认为设定字体的消息)
+void MyWnds::SendMessageToControl(HWND hWnd, const std::initializer_list<int>& controlID, UINT Msg, WPARAM wParam, LPARAM lParam) {
+	for (auto cID : controlID) {
+		SendMessage(GetDlgItem(hWnd, cID), Msg, wParam, lParam);
+	}
 }

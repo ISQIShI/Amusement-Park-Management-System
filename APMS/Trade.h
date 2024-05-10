@@ -2,7 +2,9 @@
 #include"Time.h"
 
 class Trade {
-private:
+public:
+	//交易ID
+	TCHAR mID[tradeID];
 	//交易金额
 	UINT mMoney;
 	//进行交易的用户名
@@ -11,14 +13,9 @@ private:
 	TCHAR mDevID[devID];
 	//交易时间
 	Time mTime;
-public:
+
 	//交易记录总个数
 	static UINT mCount;
 	//增加交易记录
-	void TradeAdd();
-	//修改交易记录
-	void TradeModify();
-	//删除交易记录
-	void TradeDelete();
 };
 
