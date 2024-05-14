@@ -32,6 +32,7 @@ BYTE MyWnds::fontFlag;
 BYTE MyWnds::mainWndStyle = LoginUI;
 BYTE MyWnds::mainWndFlag = LoginUI;
 Account MyWnds::currentAct = {0};
+BYTE MyWnds::dialogFlag;
 
 HWND MyWnds::MainWndProc_hwnd;
 UINT MyWnds::MainWndProc_uMsg;
@@ -58,6 +59,16 @@ HWND MyWnds::TradeInfoProc_hwnd;
 UINT MyWnds::TradeInfoProc_uMsg;
 WPARAM MyWnds::TradeInfoProc_wParam;
 LPARAM MyWnds::TradeInfoProc_lParam;
+
+SHORT MyWnds::x_Listview = -1;
+UINT MyWnds::y_Listview = 0;
+
+
+//对话框的参数
+HWND MyWnds::DialogProc_hwnd;
+UINT MyWnds::DialogProc_uMsg;
+WPARAM MyWnds::DialogProc_wParam;
+LPARAM MyWnds::DialogProc_lParam;
 
 //获取各数据记录个数
 void MyWnds::GetDataCount() {
@@ -660,11 +671,15 @@ void MyWnds::ActInfoProc_WM_NOTIFY() {
 		switch (LPNMHDR(MyWnds::ActInfoProc_lParam)->idFrom) {
 		case actInfoListID:
 		{
-
+			MyWnds::x_Listview = LPNMITEMACTIVATE(MyWnds::ActInfoProc_lParam)->iSubItem;
+			MyWnds::y_Listview = LPNMITEMACTIVATE(MyWnds::ActInfoProc_lParam)->iItem;
 		}
 		break;
 		case actReturnSysLinkID:
 		{
+			//列表坐标初始化
+			MyWnds::x_Listview = -1;
+			MyWnds::y_Listview = 0;
 			//销毁控件
 			MyWnds::DestroyControl(MyWnds::ActInfoProc_hwnd, {actReturnSysLinkID,actInfoListID,actInfoSysLinkID});
 			//创建控件
@@ -756,7 +771,7 @@ void MyWnds::ActInfoProc_WM_NOTIFY() {
 			DWORD tempDWORD = 0;//存放实际读取的字节数
 			TCHAR tempTCHAR[30];
 			LVITEM tempINSERT = { 0 };
-			HANDLE tempHANDLE = CreateFile(_T("Account.dat"), GENERIC_READ , NULL, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+			HANDLE tempHANDLE = CreateFile(_T("Account.dat"), GENERIC_READ , NULL, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);//打开文件
 			for (int x = 0; true;++x) {
 				ReadFile(tempHANDLE, &tempAct, sizeof(Account), &tempDWORD, NULL);//读取文件
 				if (!tempDWORD)break;
@@ -809,16 +824,94 @@ void MyWnds::ActInfoProc_WM_NOTIFY() {
 		{
 			if (PNMLINK(MyWnds::ActInfoProc_lParam)->item.iLink == 0)//增加
 			{
+				dialogFlag = dialogActAdd;
+				MyWnds::Dialog();
 
 			}
 			else if (PNMLINK(MyWnds::ActInfoProc_lParam)->item.iLink == 1)//修改
 			{
-
+				TCHAR tempTCHAR[20] = {};
+				ListView_GetItemText(GetDlgItem(MyWnds::ActInfoProc_hwnd, actInfoListID), MyWnds::y_Listview, 4, tempTCHAR, 8);
+				if ((MyWnds::x_Listview == -1 && MyWnds::y_Listview == 0) || MyWnds::y_Listview >= ListView_GetItemCount(GetDlgItem(MyWnds::ActInfoProc_hwnd, actInfoListID))) {
+					MessageBox(MyWnds::ActInfoProc_hwnd, _T("请选择要修改的用户"), _T("提示"), MB_ICONINFORMATION);
+				}
+				else if (currentAct.mPer.mAdmin <= _wtoi(tempTCHAR)) {
+					MessageBox(MyWnds::ActInfoProc_hwnd, _T("您的权限不足，无法修改所选用户信息"), _T("权限不足"), MB_ICONERROR);
+				}
+				else {
+					dialogFlag = dialogActModify;
+					MyWnds::Dialog();
+				}
 			}
 			else if (PNMLINK(MyWnds::ActInfoProc_lParam)->item.iLink == 2)//删除
 			{
+				TCHAR tempTCHAR[20] = {};
+				if (MessageBox(MyWnds::ActInfoProc_hwnd, _T("确定要删除这些用户吗？"), _T("提示"), MB_OKCANCEL | MB_ICONINFORMATION) == IDOK) {
+					for (int y =  ListView_GetItemCount(GetDlgItem(MyWnds::ActInfoProc_hwnd, actInfoListID)) - 1; y >=0 ; --y) {
+						if (ListView_GetCheckState(GetDlgItem(MyWnds::ActInfoProc_hwnd, actInfoListID), y)) {
+							ListView_GetItemText(GetDlgItem(MyWnds::ActInfoProc_hwnd, actInfoListID), y , 2, tempTCHAR, actUserName * 2);
+							if (!_tcscmp(MyWnds::currentAct.mID, tempTCHAR))continue;
+							Data<Account>::DataDelete(_T("Account.dat"), tempTCHAR);
+						}
+					}
+				}
+			}
+			//准备刷新列表数据
+			//删除所有行
+			ListView_DeleteAllItems(GetDlgItem(MyWnds::ActInfoProc_hwnd, actInfoListID));
+			//插入行
+			Account tempAct;//存放将要读取的用户数据
+			DWORD tempDWORD = 0;//存放实际读取的字节数
+			TCHAR tempTCHAR[30];
+			LVITEM tempINSERT = { 0 };
+			HANDLE tempHANDLE = CreateFile(_T("Account.dat"), GENERIC_READ, NULL, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);//打开文件
+			for (int x = 0; true; ++x) {
+				ReadFile(tempHANDLE, &tempAct, sizeof(Account), &tempDWORD, NULL);//读取文件
+				if (!tempDWORD)break;
+				tempINSERT.mask = LVIF_TEXT;
+				tempINSERT.iItem = x;
+				tempINSERT.iSubItem = 0;
+				_stprintf_s(tempTCHAR, _T("%d"), x + 1);
+				tempINSERT.pszText = tempTCHAR;
+				ListView_InsertItem(GetDlgItem(MyWnds::ActInfoProc_hwnd, actInfoListID), &tempINSERT);
+
+				++tempINSERT.iSubItem;
+				tempINSERT.pszText = tempAct.mName;
+				ListView_SetItem(GetDlgItem(MyWnds::ActInfoProc_hwnd, actInfoListID), &tempINSERT);
+
+				++tempINSERT.iSubItem;
+				tempINSERT.pszText = tempAct.mID;
+				ListView_SetItem(GetDlgItem(MyWnds::ActInfoProc_hwnd, actInfoListID), &tempINSERT);
+
+				++tempINSERT.iSubItem;
+				tempINSERT.pszText = tempAct.mPasswd;
+				ListView_SetItem(GetDlgItem(MyWnds::ActInfoProc_hwnd, actInfoListID), &tempINSERT);
+
+				++tempINSERT.iSubItem;
+				_stprintf_s(tempTCHAR, _T("%d"), tempAct.mPer.mAdmin);
+				tempINSERT.pszText = tempTCHAR;
+				ListView_SetItem(GetDlgItem(MyWnds::ActInfoProc_hwnd, actInfoListID), &tempINSERT);
+
+				++tempINSERT.iSubItem;
+				_stprintf_s(tempTCHAR, _T("%d"), tempAct.mCredit);
+				tempINSERT.pszText = tempTCHAR;
+				ListView_SetItem(GetDlgItem(MyWnds::ActInfoProc_hwnd, actInfoListID), &tempINSERT);
+
+				++tempINSERT.iSubItem;
+				_stprintf_s(tempTCHAR, tempAct.mRegTime.mDate);
+				wcscat_s(tempTCHAR, _T(" "));
+				wcscat_s(tempTCHAR, tempAct.mRegTime.mMoment);
+				tempINSERT.pszText = tempTCHAR;
+				ListView_SetItem(GetDlgItem(MyWnds::ActInfoProc_hwnd, actInfoListID), &tempINSERT);
 
 			}
+			CloseHandle(tempHANDLE);//关闭文件
+
+			MyWnds::actInfoSysLinkFlag = 4;
+			//重绘整个窗口
+			InvalidateRect(MyWnds::MyWnds::ActInfoProc_hwnd, NULL, TRUE);
+			SendMessage(MyWnds::MyWnds::ActInfoProc_hwnd, WM_PAINT, NULL, NULL);
+
 		}
 		break;
 		case saveSysLinkID: 
@@ -832,6 +925,7 @@ void MyWnds::ActInfoProc_WM_NOTIFY() {
 				else if (MyWnds::actInfoSysLinkFlag == 2) {
 					_stprintf_s(MyWnds::currentAct.mPasswd, tempTCHAR);
 				}
+				//修改用户
 				Data<Account>::DataModify(_T("Account.dat"), MyWnds::currentAct);
 				MyWnds::actInfoSysLinkFlag = 0;
 				DestroyWindow(GetDlgItem(MyWnds::ActInfoProc_hwnd, saveSysLinkID));
@@ -1169,6 +1263,378 @@ void MyWnds::TradeInfo() {
 			exit(-1);
 		}
 	}
+}
+
+
+//创建模态对话框
+LRESULT CALLBACK MyWnds::DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+	MyWnds::DialogProc_hwnd = hwnd;
+	MyWnds::DialogProc_uMsg = uMsg;
+	MyWnds::DialogProc_wParam = wParam;
+	MyWnds::DialogProc_lParam = lParam;
+
+	switch (uMsg)
+	{
+	case WM_COMMAND:
+	{
+		if (HIWORD(MyWnds::DialogProc_wParam) == BN_CLICKED) {
+			switch (LOWORD(MyWnds::DialogProc_wParam)) {
+			case confirmButtonID: {
+				switch (dialogFlag) {
+				case dialogActAdd: case dialogActModify:
+				{
+					TCHAR tempTCHAR[20];
+					Account tempAct = { 0 };//存放用户数据
+					Edit_GetText(GetDlgItem(MyWnds::DialogProc_hwnd, actNameEditID), tempAct.mName, actName);//获取用户昵称
+					Edit_GetText(GetDlgItem(MyWnds::DialogProc_hwnd, userNameEditID), tempAct.mID, actUserName);//获取用户名
+					Edit_GetText(GetDlgItem(MyWnds::DialogProc_hwnd, passwdEditID), tempAct.mPasswd, actPasswd);//获取密码
+					Edit_GetText(GetDlgItem(MyWnds::DialogProc_hwnd, actPerEditID), tempTCHAR, 1 + GetWindowTextLength(GetDlgItem(MyWnds::DialogProc_hwnd, actPerEditID)));//获取权限
+					if ( !(*tempAct.mName)|| !(*tempAct.mID) || !(*tempAct.mPasswd) || !(*tempTCHAR)) {
+						MessageBox(MyWnds::DialogProc_hwnd, _T("您的输入无效，请重新输入"), _T("错误"), MB_ICONERROR);
+						return 0;
+					}
+					tempAct.mPer.mAdmin = _wtoi(tempTCHAR);
+					Edit_GetText(GetDlgItem(MyWnds::DialogProc_hwnd, actCreditEditID), tempTCHAR, 1 + GetWindowTextLength(GetDlgItem(MyWnds::DialogProc_hwnd, actCreditEditID)));//获取余额
+					if (!(*tempTCHAR)) {
+						MessageBox(MyWnds::DialogProc_hwnd, _T("您的输入无效，请重新输入"), _T("错误"), MB_ICONERROR);
+						return 0;
+					}
+					if (dialogFlag == dialogActAdd && Data<Account>::DataSearch(_T("Account.dat"), tempAct.mID)) {
+						MessageBox(MyWnds::DialogProc_hwnd, _T("您输入的用户名已存在，请重新输入"), _T("错误"), MB_ICONERROR);
+						return 0;
+					}
+					if (MyWnds::currentAct.mPer.mAdmin <= tempAct.mPer.mAdmin) {
+						MessageBox(MyWnds::DialogProc_hwnd, _T("设定的权限应小于您的权限"), _T("权限不足"), MB_ICONERROR);
+						return 0;
+					}
+					tempAct.mCredit = _wtoi(tempTCHAR);
+					//获取系统时间&设定注册时间
+					SYSTEMTIME sysTime;
+					GetLocalTime(&sysTime);
+					_stprintf_s(tempAct.mRegTime.mDate, _T("%04d-%02d-%02d"), sysTime.wYear, sysTime.wMonth, sysTime.wDay);
+					_stprintf_s(tempAct.mRegTime.mMoment, _T("%02d:%02d:%02d"), sysTime.wHour, sysTime.wMinute, sysTime.wSecond);
+					if(dialogFlag == dialogActAdd) Data<Account>::DataAdd(_T("Account.dat"), tempAct);	//调用函数创建用户
+					else Data<Account>::DataModify(_T("Account.dat"), tempAct);//调用函数修改用户
+					//使用主窗口
+					EnableWindow(MyWnds::MainWndProc_hwnd, TRUE);
+					//销毁窗口并发送WM_DESTROY消息
+					DestroyWindow(hwnd);
+				}
+				break;
+				}
+			}
+			break;
+			case cancelButtonID: {
+				if (MessageBox(MyWnds::DialogProc_hwnd, _T("关闭对话框？"), _T("游乐园管理系统"), MB_OKCANCEL) == IDOK)
+				{
+					//使用主窗口
+					EnableWindow(MyWnds::MainWndProc_hwnd, TRUE);
+					//销毁窗口并发送WM_DESTROY消息
+					DestroyWindow(hwnd);
+				}
+			}
+			break;
+			}
+		}
+	}
+	break;
+	case WM_CLOSE:
+	{
+		if (MessageBox(MyWnds::DialogProc_hwnd, _T("关闭对话框？"), _T("游乐园管理系统"), MB_OKCANCEL) == IDOK)
+		{
+			//使用主窗口
+			EnableWindow(MyWnds::MainWndProc_hwnd, TRUE);
+			//销毁窗口并发送WM_DESTROY消息
+			DestroyWindow(hwnd);
+		}
+	}
+	break;
+	case WM_DESTROY:
+	{
+		PostQuitMessage(0);//发布WM_QUIT消息
+	}
+	break;
+	case WM_CTLCOLORSTATIC:
+	{
+		MyWnds::hDC = (HDC)MyWnds::DialogProc_wParam;
+		SetTextColor(MyWnds::hDC, RGB(0, 0, 0));//文字前景色
+		//SetBkColor(MyWnds::hDC, RGB(174, 214, 241));//文字背景色
+		SetBkMode(MyWnds::hDC, TRANSPARENT);
+		MyWnds::hDC = NULL;
+		return (INT_PTR)MyWnds::defHBrush;
+	}
+	break;
+	case WM_CREATE:
+	{
+		switch (dialogFlag) {
+		case dialogActAdd:
+			DialogActAdd();
+			break;
+		case dialogActModify:
+			DialogActModify();
+			break;
+		}
+	}
+	break;
+	default://未自定义的其他消息
+		return DefWindowProc(hwnd, uMsg, wParam, lParam);//默认窗口过程
+	}
+	return 0;
+
+}
+
+void MyWnds::DialogActAdd() {
+	int DialogWidth = int(0.7 * MyWnds::defMainWndHeight), DialogHeight = int(0.8 * MyWnds::defMainWndHeight);
+	//昵称
+	CreateWindowEx(
+		0, WC_STATIC, _T("昵称"), WS_CHILD | WS_VISIBLE | SS_SIMPLE,
+		int(0.04 * DialogWidth), int(0.11 * DialogHeight),int(0.1 * DialogWidth),int(0.05 * DialogHeight),
+		MyWnds::DialogProc_hwnd, HMENU(actNameStaticID), MyWnds::hInstance, NULL
+	);
+	SendMessage(GetDlgItem(MyWnds::DialogProc_hwnd, actNameStaticID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
+	CreateWindowEx(
+		WS_EX_CLIENTEDGE, WC_EDIT, _T(""), WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL,
+		int(0.15 * DialogWidth), int(0.1 * DialogHeight), int(0.8 * DialogWidth), int(0.05 * DialogHeight),
+		MyWnds::DialogProc_hwnd, HMENU(actNameEditID), MyWnds::hInstance, NULL
+	);
+	Edit_SetCueBannerText(GetDlgItem(MyWnds::DialogProc_hwnd, actNameEditID), _T("请输入用户昵称"));//设置编辑控件中的文本提示
+	Edit_LimitText(GetDlgItem(MyWnds::DialogProc_hwnd, actNameEditID), actName - 1); //限制可在编辑控件中输入的用户名的长度
+	SendMessage(GetDlgItem(MyWnds::DialogProc_hwnd, actNameEditID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
+	//用户名
+	CreateWindowEx(
+		0, WC_STATIC, _T("用户名"), WS_CHILD | WS_VISIBLE | SS_SIMPLE,
+		int(0.02 * DialogWidth), int(0.26 * DialogHeight), int(0.12 * DialogWidth), int(0.05 * DialogHeight),
+		MyWnds::DialogProc_hwnd, HMENU(userNameStaticID), MyWnds::hInstance, NULL
+	);
+	SendMessage(GetDlgItem(MyWnds::DialogProc_hwnd, userNameStaticID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
+	CreateWindowEx(
+		WS_EX_CLIENTEDGE, WC_EDIT, _T(""), WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL,
+		int(0.15 * DialogWidth), int(0.25 * DialogHeight), int(0.8 * DialogWidth), int(0.05 * DialogHeight),
+		MyWnds::DialogProc_hwnd, HMENU(userNameEditID), MyWnds::hInstance, NULL
+	);
+	Edit_SetCueBannerText(GetDlgItem(MyWnds::DialogProc_hwnd, userNameEditID), _T("请输入用户名"));//设置编辑控件中的文本提示
+	Edit_LimitText(GetDlgItem(MyWnds::DialogProc_hwnd, userNameEditID), actUserName - 1); //限制可在编辑控件中输入的用户名的长度
+	SendMessage(GetDlgItem(MyWnds::DialogProc_hwnd, userNameEditID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
+	//密码
+	CreateWindowEx(
+		0, WC_STATIC, _T("密码"), WS_CHILD | WS_VISIBLE | SS_SIMPLE,
+		int(0.04 * DialogWidth), int(0.41 * DialogHeight), int(0.1 * DialogWidth), int(0.05 * DialogHeight),
+		MyWnds::DialogProc_hwnd, HMENU(passwdStaticID), MyWnds::hInstance, NULL
+	);
+	SendMessage(GetDlgItem(MyWnds::DialogProc_hwnd, passwdStaticID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
+	CreateWindowEx(
+		WS_EX_CLIENTEDGE, WC_EDIT, _T(""), WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL ,
+		int(0.15 * DialogWidth), int(0.4 * DialogHeight), int(0.8 * DialogWidth), int(0.05 * DialogHeight),
+		MyWnds::DialogProc_hwnd, HMENU(passwdEditID), MyWnds::hInstance, NULL
+	);
+	Edit_SetCueBannerText(GetDlgItem(MyWnds::DialogProc_hwnd, passwdEditID), _T("请输入密码"));//设置编辑控件中的文本提示
+	Edit_LimitText(GetDlgItem(MyWnds::DialogProc_hwnd, passwdEditID), actPasswd - 1); //限制可在编辑控件中输入的密码的长度
+	SendMessage(GetDlgItem(MyWnds::DialogProc_hwnd, passwdEditID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
+	//权限
+	CreateWindowEx(
+		0, WC_STATIC, _T("权限"), WS_CHILD | WS_VISIBLE | SS_SIMPLE,
+		int(0.04 * DialogWidth), int(0.56 * DialogHeight), int(0.1 * DialogWidth), int(0.05 * DialogHeight),
+		MyWnds::DialogProc_hwnd, HMENU(actPerStaticID), MyWnds::hInstance, NULL
+	);
+	SendMessage(GetDlgItem(MyWnds::DialogProc_hwnd, actPerStaticID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
+	CreateWindowEx(
+		WS_EX_CLIENTEDGE, WC_EDIT, _T(""), WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL | ES_NUMBER,
+		int(0.15 * DialogWidth), int(0.55 * DialogHeight), int(0.8 * DialogWidth), int(0.05 * DialogHeight),
+		MyWnds::DialogProc_hwnd, HMENU(actPerEditID), MyWnds::hInstance, NULL
+	);
+	Edit_SetCueBannerText(GetDlgItem(MyWnds::DialogProc_hwnd, actPerEditID), _T("请输入权限"));//设置编辑控件中的文本提示
+	Edit_LimitText(GetDlgItem(MyWnds::DialogProc_hwnd, actPerEditID), 3); //限制可在编辑控件中输入的权限的长度
+	SendMessage(GetDlgItem(MyWnds::DialogProc_hwnd, actPerEditID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
+	//余额
+	CreateWindowEx(
+		0, WC_STATIC, _T("余额"), WS_CHILD | WS_VISIBLE | SS_SIMPLE,
+		int(0.04 * DialogWidth), int(0.71 * DialogHeight), int(0.1 * DialogWidth), int(0.05 * DialogHeight),
+		MyWnds::DialogProc_hwnd, HMENU(actCreditStaticID), MyWnds::hInstance, NULL
+	);
+	SendMessage(GetDlgItem(MyWnds::DialogProc_hwnd, actCreditStaticID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
+	CreateWindowEx(
+		WS_EX_CLIENTEDGE, WC_EDIT, _T(""), WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL | ES_NUMBER,
+		int(0.15 * DialogWidth), int(0.7 * DialogHeight), int(0.8 * DialogWidth), int(0.05 * DialogHeight),
+		MyWnds::DialogProc_hwnd, HMENU(actCreditEditID), MyWnds::hInstance, NULL
+	);
+	Edit_SetCueBannerText(GetDlgItem(MyWnds::DialogProc_hwnd, actCreditEditID), _T("请输入余额"));//设置编辑控件中的文本提示
+	SendMessage(GetDlgItem(MyWnds::DialogProc_hwnd, actCreditEditID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
+	//确认
+	CreateWindowEx(
+		0, WC_BUTTON, _T("确认"), WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+		int(0.2 * DialogWidth), int(0.8 * DialogHeight), int(0.2 * DialogWidth), int(0.1 * DialogHeight),
+		MyWnds::DialogProc_hwnd, HMENU(confirmButtonID), MyWnds::hInstance, NULL
+	);
+	SendMessage(GetDlgItem(MyWnds::DialogProc_hwnd, confirmButtonID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
+	//取消
+	CreateWindowEx(
+		0, WC_BUTTON, _T("取消"), WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+		int(0.6 * DialogWidth), int(0.8 * DialogHeight), int(0.2 * DialogWidth), int(0.1 * DialogHeight),
+		MyWnds::DialogProc_hwnd, HMENU(cancelButtonID), MyWnds::hInstance, NULL
+	);
+	SendMessage(GetDlgItem(MyWnds::DialogProc_hwnd, cancelButtonID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
+}
+
+void MyWnds::DialogActModify() {
+	int DialogWidth = int(0.7 * MyWnds::defMainWndHeight), DialogHeight = int(0.8 * MyWnds::defMainWndHeight);
+	Account tempAct = { 0 };//存放将要读取的用户数据
+	DWORD tempDWORD = 0;//存放实际读取的字节数
+	TCHAR tempTCHAR[20] = {};
+	//获取点击位置的用户信息
+	HANDLE tempHANDLE = CreateFile(_T("Account.dat"), GENERIC_READ, NULL, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);//打开文件
+	//文件指针移动到该用户数据之前
+	LARGE_INTEGER tempL_I;
+	tempL_I.QuadPart = (long long)(sizeof(Account)) * MyWnds::y_Listview;
+	SetFilePointerEx(tempHANDLE, tempL_I, NULL, FILE_BEGIN);
+	ReadFile(tempHANDLE, &tempAct, sizeof(Account), &tempDWORD, NULL);//读取文件
+	CloseHandle(tempHANDLE);//关闭文件
+	//昵称
+	CreateWindowEx(
+		0, WC_STATIC, _T("昵称"), WS_CHILD | WS_VISIBLE | SS_SIMPLE,
+		int(0.04 * DialogWidth), int(0.11 * DialogHeight), int(0.1 * DialogWidth), int(0.05 * DialogHeight),
+		MyWnds::DialogProc_hwnd, HMENU(actNameStaticID), MyWnds::hInstance, NULL
+	);
+	SendMessage(GetDlgItem(MyWnds::DialogProc_hwnd, actNameStaticID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
+	CreateWindowEx(
+		WS_EX_CLIENTEDGE, WC_EDIT, tempAct.mName, WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL,
+		int(0.15 * DialogWidth), int(0.1 * DialogHeight), int(0.8 * DialogWidth), int(0.05 * DialogHeight),
+		MyWnds::DialogProc_hwnd, HMENU(actNameEditID), MyWnds::hInstance, NULL
+	);
+	Edit_SetCueBannerText(GetDlgItem(MyWnds::DialogProc_hwnd, actNameEditID), _T("请输入用户昵称"));//设置编辑控件中的文本提示
+	Edit_LimitText(GetDlgItem(MyWnds::DialogProc_hwnd, actNameEditID), actName - 1); //限制可在编辑控件中输入的用户名的长度
+	SendMessage(GetDlgItem(MyWnds::DialogProc_hwnd, actNameEditID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
+	//用户名
+	CreateWindowEx(
+		0, WC_STATIC, _T("用户名"), WS_CHILD | WS_VISIBLE | SS_SIMPLE,
+		int(0.02 * DialogWidth), int(0.26 * DialogHeight), int(0.12 * DialogWidth), int(0.05 * DialogHeight),
+		MyWnds::DialogProc_hwnd, HMENU(userNameStaticID), MyWnds::hInstance, NULL
+	);
+	SendMessage(GetDlgItem(MyWnds::DialogProc_hwnd, userNameStaticID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
+	CreateWindowEx(
+		WS_EX_CLIENTEDGE, WC_EDIT, tempAct.mID, WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL,
+		int(0.15 * DialogWidth), int(0.25 * DialogHeight), int(0.8 * DialogWidth), int(0.05 * DialogHeight),
+		MyWnds::DialogProc_hwnd, HMENU(userNameEditID), MyWnds::hInstance, NULL
+	);
+	Edit_SetReadOnly(GetDlgItem(MyWnds::DialogProc_hwnd, userNameEditID), TRUE);
+	SendMessage(GetDlgItem(MyWnds::DialogProc_hwnd, userNameEditID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
+	//密码
+	CreateWindowEx(
+		0, WC_STATIC, _T("密码"), WS_CHILD | WS_VISIBLE | SS_SIMPLE,
+		int(0.04 * DialogWidth), int(0.41 * DialogHeight), int(0.1 * DialogWidth), int(0.05 * DialogHeight),
+		MyWnds::DialogProc_hwnd, HMENU(passwdStaticID), MyWnds::hInstance, NULL
+	);
+	SendMessage(GetDlgItem(MyWnds::DialogProc_hwnd, passwdStaticID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
+	CreateWindowEx(
+		WS_EX_CLIENTEDGE, WC_EDIT, tempAct.mPasswd, WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL ,
+		int(0.15 * DialogWidth), int(0.4 * DialogHeight), int(0.8 * DialogWidth), int(0.05 * DialogHeight),
+		MyWnds::DialogProc_hwnd, HMENU(passwdEditID), MyWnds::hInstance, NULL
+	);
+	Edit_SetCueBannerText(GetDlgItem(MyWnds::DialogProc_hwnd, passwdEditID), _T("请输入密码"));//设置编辑控件中的文本提示
+	Edit_LimitText(GetDlgItem(MyWnds::DialogProc_hwnd, passwdEditID), actPasswd - 1); //限制可在编辑控件中输入的密码的长度
+	SendMessage(GetDlgItem(MyWnds::DialogProc_hwnd, passwdEditID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
+	//权限
+	CreateWindowEx(
+		0, WC_STATIC, _T("权限"), WS_CHILD | WS_VISIBLE | SS_SIMPLE,
+		int(0.04 * DialogWidth), int(0.56 * DialogHeight), int(0.1 * DialogWidth), int(0.05 * DialogHeight),
+		MyWnds::DialogProc_hwnd, HMENU(actPerStaticID), MyWnds::hInstance, NULL
+	);
+	SendMessage(GetDlgItem(MyWnds::DialogProc_hwnd, actPerStaticID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
+	_stprintf_s(tempTCHAR, _T("%d"), tempAct.mPer.mAdmin);
+	CreateWindowEx(
+		WS_EX_CLIENTEDGE, WC_EDIT, tempTCHAR, WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL | ES_NUMBER,
+		int(0.15 * DialogWidth), int(0.55 * DialogHeight), int(0.8 * DialogWidth), int(0.05 * DialogHeight),
+		MyWnds::DialogProc_hwnd, HMENU(actPerEditID), MyWnds::hInstance, NULL
+	);
+	Edit_SetCueBannerText(GetDlgItem(MyWnds::DialogProc_hwnd, actPerEditID), _T("请输入权限"));//设置编辑控件中的文本提示
+	Edit_LimitText(GetDlgItem(MyWnds::DialogProc_hwnd, actPerEditID), 3); //限制可在编辑控件中输入的权限的长度
+	SendMessage(GetDlgItem(MyWnds::DialogProc_hwnd, actPerEditID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
+	//余额
+	CreateWindowEx(
+		0, WC_STATIC, _T("余额"), WS_CHILD | WS_VISIBLE | SS_SIMPLE,
+		int(0.04 * DialogWidth), int(0.71 * DialogHeight), int(0.1 * DialogWidth), int(0.05 * DialogHeight),
+		MyWnds::DialogProc_hwnd, HMENU(actCreditStaticID), MyWnds::hInstance, NULL
+	);
+	SendMessage(GetDlgItem(MyWnds::DialogProc_hwnd, actCreditStaticID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
+	_stprintf_s(tempTCHAR, _T("%d"), tempAct.mCredit);
+	CreateWindowEx(
+		WS_EX_CLIENTEDGE, WC_EDIT, tempTCHAR, WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL | ES_NUMBER,
+		int(0.15 * DialogWidth), int(0.7 * DialogHeight), int(0.8 * DialogWidth), int(0.05 * DialogHeight),
+		MyWnds::DialogProc_hwnd, HMENU(actCreditEditID), MyWnds::hInstance, NULL
+	);
+	Edit_SetCueBannerText(GetDlgItem(MyWnds::DialogProc_hwnd, actCreditEditID), _T("请输入余额"));//设置编辑控件中的文本提示
+	SendMessage(GetDlgItem(MyWnds::DialogProc_hwnd, actCreditEditID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
+	//确认
+	CreateWindowEx(
+		0, WC_BUTTON, _T("确认"), WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+		int(0.2 * DialogWidth), int(0.8 * DialogHeight), int(0.2 * DialogWidth), int(0.1 * DialogHeight),
+		MyWnds::DialogProc_hwnd, HMENU(confirmButtonID), MyWnds::hInstance, NULL
+	);
+	SendMessage(GetDlgItem(MyWnds::DialogProc_hwnd, confirmButtonID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
+	//取消
+	CreateWindowEx(
+		0, WC_BUTTON, _T("取消"), WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+		int(0.6 * DialogWidth), int(0.8 * DialogHeight), int(0.2 * DialogWidth), int(0.1 * DialogHeight),
+		MyWnds::DialogProc_hwnd, HMENU(cancelButtonID), MyWnds::hInstance, NULL
+	);
+	SendMessage(GetDlgItem(MyWnds::DialogProc_hwnd, cancelButtonID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
+
+}
+
+
+WPARAM MyWnds::Dialog() {
+	//创建对话框
+	HWND dialogHwnd = CreateWindowEx(
+		0, _T("dialogClassName"), _T("对话框"), WS_TILEDWINDOW | WS_VISIBLE ,
+		int(0.45 * MyWnds::defScreenWidth), int(0.2 * MyWnds::defScreenHeight), int(0.7 * MyWnds::defMainWndHeight), int(0.8 * MyWnds::defMainWndHeight),
+		MyWnds::MainWndProc_hwnd, NULL, MyWnds::hInstance, NULL
+	);
+	if (!dialogHwnd) {
+		//实例化窗口类对象---对话框
+		WNDCLASSEX dialogClass = { 0 };
+		dialogClass.cbSize = sizeof(WNDCLASSEX);
+		dialogClass.style = CS_HREDRAW | CS_VREDRAW;//类样式
+		dialogClass.lpfnWndProc = MyWnds::DialogProc;//窗口过程
+		dialogClass.hInstance = MyWnds::hInstance;//程序实例
+		dialogClass.hbrBackground = HBRUSH(6);//类背景画刷
+		dialogClass.lpszClassName = _T("dialogClassName");//窗口类名
+		dialogClass.hIcon = LoadIcon(NULL, IDI_APPLICATION);//窗口图标
+		//注册窗口类---对话框
+		if (!RegisterClassEx(&dialogClass)) {
+			MessageBox(MyWnds::MainWndProc_hwnd, _T("注册窗口类---对话框，失败"), _T("错误信息"), MB_OK | MB_ICONERROR | MB_APPLMODAL);
+			exit(-1);
+		}
+		//创建窗口---对话框
+		dialogHwnd = CreateWindowEx(
+			0, _T("dialogClassName"), _T("对话框"), WS_TILEDWINDOW | WS_VISIBLE,
+			int(0.45 * MyWnds::defScreenWidth), int(0.2 * MyWnds::defScreenHeight), int(0.7 * MyWnds::defMainWndHeight), int(0.8 * MyWnds::defMainWndHeight),
+			MyWnds::MainWndProc_hwnd, NULL, MyWnds::hInstance, NULL
+		);
+		if (!dialogHwnd) {
+			MessageBox(MyWnds::MainWndProc_hwnd, _T("创建窗口---对话框，失败"), _T("错误信息"), MB_OK | MB_ICONERROR | MB_APPLMODAL);
+			exit(-1);
+		}
+	}
+	//禁用主窗口
+	EnableWindow(MyWnds::MainWndProc_hwnd, FALSE);
+	//构建消息循环
+	MSG Msg = { 0 };
+	BOOL bRet = 1;
+	while (bRet = (GetMessage(&Msg, NULL, 0, 0)) != 0) {
+		if (bRet == -1)
+		{
+			MessageBox(MyWnds::MainWndProc_hwnd, _T("消息检索失败"), _T("错误信息"), MB_OK | MB_ICONERROR | MB_APPLMODAL);
+			exit(-1);
+		}
+		else
+		{
+			TranslateMessage(&Msg);
+			DispatchMessage(&Msg);
+		}
+	}
+	//强制主窗口显示在前台
+	ShowWindowAsync(MyWnds::MainWndProc_hwnd, SW_HIDE);
+	ShowWindowAsync(MyWnds::MainWndProc_hwnd, SW_SHOW);
+	return Msg.wParam;
 }
 
 

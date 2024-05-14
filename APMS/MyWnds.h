@@ -23,15 +23,23 @@
 #define devInfoButtonID 107//设备信息按钮
 #define tradeInfoButtonID 108//交易记录按钮
 #define exitButtonID 109//退出系统
+#define confirmButtonID 110//确认
+#define cancelButtonID 111//取消
 //编辑框
 #define userNameEditID 201//用户名
 #define passwdEditID 202//密码
 #define actNameEditID 203//用户昵称
 #define editActInfoEditID 204//编辑用户信息
+#define actPerEditID 205//权限
+#define actCreditEditID 206//余额
+
 //静态文本
 #define userNameStaticID 301//用户名
 #define passwdStaticID 302//密码
 #define actNameStaticID 303//昵称
+#define actPerStaticID 304//权限
+#define actCreditStaticID 305//余额
+
 //SysLink
 #define editActNameSysLinkID 401//编辑用户昵称
 #define editPasswdSysLinkID 402//修改密码
@@ -41,7 +49,6 @@
 #define browseActSysLinkID 406//查看所有用户（需要权限）
 #define actReturnSysLinkID 407//返回
 #define actInfoSysLinkID 408//更改用户信息
-
 //ListView
 #define actInfoListID 501//用户信息列表
 
@@ -52,6 +59,11 @@
 #define ActInfoUI 4
 #define DevInfoUI 5
 #define TradeInfoUI 6
+
+//对话框
+#define dialogActAdd 1
+#define dialogActModify 2
+
 
 //字体
 #define defSmallFont 1
@@ -99,6 +111,8 @@ public:
 	static BYTE mainWndFlag;
 	//当前用户
 	static Account currentAct;
+	//对话框的标记
+	static BYTE dialogFlag;
 
 	//主窗口过程的参数
 	static HWND MainWndProc_hwnd;
@@ -129,6 +143,16 @@ public:
 	static UINT TradeInfoProc_uMsg;
 	static WPARAM TradeInfoProc_wParam;
 	static LPARAM TradeInfoProc_lParam;
+
+	//对话框的参数
+	static HWND DialogProc_hwnd;
+	static UINT DialogProc_uMsg;
+	static WPARAM DialogProc_wParam;
+	static LPARAM DialogProc_lParam;
+
+	//Listview 点击坐标
+	static SHORT x_Listview;//列标
+	static UINT y_Listview;//行标
 
 	//获取各数据的个数
 	static void GetDataCount();
@@ -181,6 +205,12 @@ public:
 	//交易记录
 	static LRESULT CALLBACK TradeInfoProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 	static void TradeInfo();
+
+	//创建模态对话框
+	static LRESULT CALLBACK DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+	static WPARAM Dialog();
+	static void DialogActAdd();
+	static void DialogActModify();
 
 	//创建子控件
 	static void createLoginButton();
