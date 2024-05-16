@@ -1,5 +1,6 @@
 #pragma once
 #include"Time.h"
+#include <wtypes.h>
 
 class Trade {
 public:
@@ -16,6 +17,15 @@ public:
 
 	//交易记录总个数
 	static UINT mCount;
-	//增加交易记录
+	
+	//交易记录的参数
+	static HWND TradeInfoProc_hwnd;
+	static UINT TradeInfoProc_uMsg;
+	static WPARAM TradeInfoProc_wParam;
+	static LPARAM TradeInfoProc_lParam;
+
+	static LRESULT CALLBACK TradeInfoProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+	static void TradeInfo();
+
 };
 

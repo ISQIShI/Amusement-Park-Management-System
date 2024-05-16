@@ -1,6 +1,7 @@
 #pragma once
 #include"Permission.h"
 #include"Time.h"
+#include <wtypes.h>
 
 class Account {
 public:
@@ -25,5 +26,19 @@ public:
 	void Recharge();
 	//提现
 	void Withdraw();
+
+	//用户信息的参数
+	static HWND ActInfoProc_hwnd;
+	static UINT ActInfoProc_uMsg;
+	static WPARAM ActInfoProc_wParam;
+	static LPARAM ActInfoProc_lParam;
+
+	static BYTE actInfoSysLinkFlag;
+	static LRESULT CALLBACK ActInfoProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+	static void ActInfoProc_WM_NOTIFY();
+	static void ActInfoProc_WM_PAINT();
+	static void ActInfoProc_WM_CREATE();
+	static void ActInfo();
+
 };
 

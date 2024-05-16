@@ -98,10 +98,6 @@ bool Data<T>::DataDelete(LPCTSTR fillname, LPCTSTR id) {
 	ReadFile(tempHANDLE, &endData, sizeof(T), &tempDWORD, NULL);
 	//当最后一个数据即为要删除的数据时,直接截断文件
 	if (!_tcscmp(endData.mID, id)) {
-		if (_tcscmp(MyWnds::currentAct.mID,id) && MyWnds::currentAct.mPer.mAdmin <= endData.mPer.mAdmin) {
-			CloseHandle(tempHANDLE);
-			return 0;
-		}//删别人时检测权限
 		//文件指针前移一整个T数据
 		SetFilePointerEx(tempHANDLE, tempL_I, NULL, FILE_CURRENT);
 		//截断文件
@@ -117,10 +113,6 @@ bool Data<T>::DataDelete(LPCTSTR fillname, LPCTSTR id) {
 	do {
 		ReadFile(tempHANDLE, &tempData, sizeof(T), &tempDWORD, NULL);//读取文件
 		if (!_tcscmp(tempData.mID, id)) {
-			if (_tcscmp(MyWnds::currentAct.mID, id) && MyWnds::currentAct.mPer.mAdmin <= tempData.mPer.mAdmin) {
-				CloseHandle(tempHANDLE);
-				return 0;
-			}//删别人时检测权限
 			tempflag = 1;//找到数据
 			break;
 		}
