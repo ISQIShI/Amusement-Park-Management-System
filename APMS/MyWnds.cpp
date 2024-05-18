@@ -316,9 +316,9 @@ LRESULT MyWnds::MainWndProc_WM_CTLCOLORSTATIC(){
 	MyWnds::hDC = (HDC)MyWnds::MainWndProc_wParam;
 	SetTextColor(MyWnds::hDC, RGB(0, 0, 0));//文字前景色
 	//SetBkColor(MyWnds::hDC, RGB(174, 214, 241));//文字背景色
-	SetBkMode(MyWnds::hDC, TRANSPARENT);
+	SetBkMode(MyWnds::hDC, TRANSPARENT);//背景透明
 	MyWnds::hDC = NULL;
-	return (INT_PTR)MyWnds::defHBrush;
+	return (INT_PTR)CreateSolidBrush(RGB(255, 255, 255));
 }
 
 void MyWnds::MainWndProc_WM_PAINT(){
@@ -383,7 +383,7 @@ WPARAM MyWnds::MainWnd() {
 	}
 	//创建窗口---主窗口
 	HWND mainHwnd = CreateWindowEx(
-		0,_T("mainWndClassName"),_T("游乐园管理系统"),WS_TILEDWINDOW,
+		WS_EX_CONTROLPARENT,_T("mainWndClassName"),_T("游乐园管理系统"),WS_TILEDWINDOW,
 		int(0.15 * MyWnds::defScreenWidth),int( 0.15 * MyWnds::defScreenHeight), MyWnds::defMainWndWidth, MyWnds::defMainWndHeight,
 		NULL,NULL, MyWnds::hInstance,NULL
 	);
@@ -404,8 +404,11 @@ WPARAM MyWnds::MainWnd() {
 		}
 		else
 		{
-			TranslateMessage(&Msg);
-			DispatchMessage(&Msg);
+			if (!IsDialogMessage(mainHwnd, &Msg)) //该函数处理键盘消息(如TAB切换控件焦点)
+			{
+				TranslateMessage(&Msg);
+				DispatchMessage(&Msg);
+			}
 		}
 	}
 	return Msg.wParam;
@@ -451,7 +454,7 @@ LRESULT CALLBACK MyWnds::HomePageProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARA
 void MyWnds::HomePage(){
 	//创建窗口---主页
 	HWND homePageHwnd = CreateWindowEx(
-		0, _T("homePageClassName"), _T("主页"), WS_TILED | WS_CHILD | WS_VISIBLE,
+		WS_EX_CONTROLPARENT, _T("homePageClassName"), _T("主页"), WS_TILED | WS_CHILD | WS_VISIBLE,
 		int((homePageButtonWidth + homePageButtonCoord_X * 2) * MyWnds::defMainWndWidth), int(homePageButtonCoord_Y / 2.0 * MyWnds::defMainWndHeight), MyWnds::homePageWidth, MyWnds::homePageHeight,
 		MyWnds::MainWndProc_hwnd, HMENU(homePageWndID), MyWnds::hInstance, NULL
 	);
@@ -472,7 +475,7 @@ void MyWnds::HomePage(){
 		}
 		//创建窗口---主页
 		homePageHwnd = CreateWindowEx(
-			0, _T("homePageClassName"), _T("主页"), WS_TILED | WS_CHILD | WS_VISIBLE,
+			WS_EX_CONTROLPARENT, _T("homePageClassName"), _T("主页"), WS_TILED | WS_CHILD | WS_VISIBLE,
 			int((homePageButtonWidth + homePageButtonCoord_X * 2) * MyWnds::defMainWndWidth), int(homePageButtonCoord_Y / 2.0 * MyWnds::defMainWndHeight), MyWnds::homePageWidth, MyWnds::homePageHeight,
 			MyWnds::MainWndProc_hwnd, HMENU(homePageWndID), MyWnds::hInstance, NULL
 		);
@@ -495,8 +498,14 @@ LRESULT CALLBACK MyWnds::DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM 
 	case WM_WINDOWPOSCHANGING:
 	{
 		WINDOWPOS* temp = (WINDOWPOS*)MyWnds::DialogProc_lParam;
-		temp->cx = int(0.7 * MyWnds::defMainWndHeight);
-		temp->cy = int(0.8 * MyWnds::defMainWndHeight);
+		if (dialogFlag == dialogTradeSelect) {
+			temp->cx = int(0.7 * MyWnds::defMainWndWidth);
+			temp->cy = int(0.8 * MyWnds::defMainWndHeight);
+		}
+		else {
+			temp->cx = int(0.7 * MyWnds::defMainWndHeight);
+			temp->cy = int(0.8 * MyWnds::defMainWndHeight);
+		}
 	}
 	break;
 	case WM_COMMAND:
@@ -581,7 +590,258 @@ LRESULT CALLBACK MyWnds::DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM 
 					DestroyWindow(hwnd);
 					break;
 				}
+				case dialogTradeAdd: case dialogTradeModify:
+				{
+					TCHAR tempTCHAR[21];
+					Trade tempTrade = { 0 };//存放交易数据
+					Edit_GetText(GetDlgItem(MyWnds::DialogProc_hwnd, tradeIDEditID), tempTrade.mID, tradeID);//获取设备ID
+					Edit_GetText(GetDlgItem(MyWnds::DialogProc_hwnd, tradeMoneyEditID), tempTCHAR, 1 + GetWindowTextLength(GetDlgItem(MyWnds::DialogProc_hwnd, tradeMoneyEditID)));//获取交易金额
+					if (!(*tempTrade.mID) || !(*tempTCHAR)|| ComboBox_GetCurSel(GetDlgItem(MyWnds::DialogProc_hwnd, userNameComboBoxID)) == -1 || ComboBox_GetCurSel(GetDlgItem(MyWnds::DialogProc_hwnd, devIDComboBoxID)) == -1) {
+						MessageBox(MyWnds::DialogProc_hwnd, _T("您的输入无效，请重新输入"), _T("错误"), MB_ICONERROR);
+						return 0;
+					}
+					
+					if (dialogFlag == dialogTradeAdd && Data<Trade>::DataSearch(_T("Trade.dat"), tempTrade.mID)) {
+						MessageBox(MyWnds::DialogProc_hwnd, _T("您输入的交易ID已存在，请重新输入"), _T("错误"), MB_ICONERROR);
+						return 0;
+					}
+					tempTrade.mMoney = _wtoi(tempTCHAR);
+					ComboBox_GetText(GetDlgItem(MyWnds::DialogProc_hwnd, userNameComboBoxID), tempTrade.mUserName, actUserName);
+					ComboBox_GetText(GetDlgItem(MyWnds::DialogProc_hwnd, devIDComboBoxID), tempTrade.mDevID, devID);
+					SYSTEMTIME tempTime;
+					DateTime_GetSystemtime(GetDlgItem(MyWnds::DialogProc_hwnd, tradeDateATimeID), &tempTime);
+					_stprintf_s(tempTrade.mTime.mDate, _T("%04d-%02d-%02d"), tempTime.wYear, tempTime.wMonth, tempTime.wDay);
+					DateTime_GetSystemtime(GetDlgItem(MyWnds::DialogProc_hwnd, tradeMomentATimeID), &tempTime);
+					_stprintf_s(tempTrade.mTime.mMoment, _T("%02d:%02d:%02d"), tempTime.wHour, tempTime.wMinute, tempTime.wSecond);
+					if (dialogFlag == dialogTradeAdd) Data<Trade>::DataAdd(_T("Trade.dat"), tempTrade);	//调用函数创建交易记录
+					else Data<Trade>::DataModify(_T("Trade.dat"), tempTrade);//调用函数修改交易记录
+					//使用主窗口
+					EnableWindow(MyWnds::MainWndProc_hwnd, TRUE);
+					//销毁窗口并发送WM_DESTROY消息
+					DestroyWindow(hwnd);
+					break;
+				}
+				case dialogTradeSelect:
+				{
+					int y;
+					bool flag = 0;
+					TCHAR tempTCHAR[31] = {}, _tempTCHAR[31] = {};
+					if (ListView_GetCheckState(GetDlgItem(MyWnds::DialogProc_hwnd, selectListID), 3) && ListView_GetCheckState(GetDlgItem(MyWnds::DialogProc_hwnd, selectListID), 4)) {
+						MessageBox(MyWnds::DialogProc_hwnd, _T("不允许同时按用户总消费和设备总收入筛选"), _T("错误"), MB_ICONERROR);
+						return 0;
+					}
+					//从前往后读取筛选列表的选项选择状态（不可随意更改顺序，后面的筛选依赖前面的筛选）
+					for ( y = 0; y < ListView_GetItemCount(GetDlgItem(MyWnds::DialogProc_hwnd, selectListID)); ++y) {
+						if (ListView_GetCheckState(GetDlgItem(MyWnds::DialogProc_hwnd, selectListID), y)) {
+							//获取筛选选项
+							ListView_GetItemText(GetDlgItem(MyWnds::DialogProc_hwnd, selectListID), y, 0, tempTCHAR, 21 );
+							if (!_tcscmp(tempTCHAR, _T("按用户"))) {
+								//对交易记录列表从后向前按用户删除(这样删除后面的记录前面的记录的索引不变)
+								for (int yy = ListView_GetItemCount(GetDlgItem(Trade::TradeInfoProc_hwnd, dataInfoListID)) - 1; yy >= 0; --yy) {
+									//获取当前记录的用户名
+									ListView_GetItemText(GetDlgItem(Trade::TradeInfoProc_hwnd, dataInfoListID), yy, 3, tempTCHAR, actUserName );
+									for (int yyy = ListView_GetItemCount(GetDlgItem(MyWnds::DialogProc_hwnd, userNameSelectListID)) - 1; yyy >= 0; --yyy) {
+										if (ListView_GetCheckState(GetDlgItem(MyWnds::DialogProc_hwnd, userNameSelectListID), yyy)) {
+											//获取筛选列表中选定的用户名
+											ListView_GetItemText(GetDlgItem(MyWnds::DialogProc_hwnd, userNameSelectListID), yyy, 0, _tempTCHAR, actUserName );
+											if (!_tcscmp(tempTCHAR, _tempTCHAR)) { flag = 1; break; }
+										}
+									}
+									//如果符合筛选条件，跳过该记录
+									if (flag) { flag = 0; continue; }
+									//不符合，删除记录
+									ListView_DeleteItem(GetDlgItem(Trade::TradeInfoProc_hwnd, dataInfoListID), yy);
+								}
+							}
+							else if (!_tcscmp(tempTCHAR, _T("按设备"))) {
+								//对交易记录列表从后向前按设备删除(这样删除后面的记录前面的记录的索引不变)
+								for (int yy = ListView_GetItemCount(GetDlgItem(Trade::TradeInfoProc_hwnd, dataInfoListID)) - 1; yy >= 0; --yy) {
+									//获取当前记录的设备ID
+									ListView_GetItemText(GetDlgItem(Trade::TradeInfoProc_hwnd, dataInfoListID), yy, 4, tempTCHAR, devID );
+									for (int yyy = ListView_GetItemCount(GetDlgItem(MyWnds::DialogProc_hwnd, devIDSelectListID)) - 1; yyy >= 0; --yyy) {
+										if (ListView_GetCheckState(GetDlgItem(MyWnds::DialogProc_hwnd, devIDSelectListID), yyy)) {
+											//获取筛选列表中选定的设备ID
+											ListView_GetItemText(GetDlgItem(MyWnds::DialogProc_hwnd, devIDSelectListID), yyy, 0, _tempTCHAR, devID );
+											if (!_tcscmp(tempTCHAR, _tempTCHAR)) { flag = 1; break; }
+										}
+									}
+									//如果符合筛选条件，跳过该记录
+									if (flag) { flag = 0; continue; }
+									//不符合，删除记录
+									ListView_DeleteItem(GetDlgItem(Trade::TradeInfoProc_hwnd, dataInfoListID), yy);
+								}
+							}
+							else if (!_tcscmp(tempTCHAR, _T("按时间"))) {
+								//对交易记录列表从后向前按时间删除(这样删除后面的记录前面的记录的索引不变)
+								for (int yy = ListView_GetItemCount(GetDlgItem(Trade::TradeInfoProc_hwnd, dataInfoListID)) - 1; yy >= 0; --yy) {
+									//获取当前记录的时间
+									ListView_GetItemText(GetDlgItem(Trade::TradeInfoProc_hwnd, dataInfoListID), yy, 5, tempTCHAR, timeDate + timeMoment);
+									TCHAR tempTimeA[timeDate + timeMoment] = {}, tempTimeB[timeDate + timeMoment] = {};
+									//起始时间
+									SYSTEMTIME tempTime;
+									DateTime_GetSystemtime(GetDlgItem(MyWnds::DialogProc_hwnd, tradeDateATimeID), &tempTime);
+									_stprintf_s(tempTimeA, _T("%04d-%02d-%02d"), tempTime.wYear, tempTime.wMonth, tempTime.wDay);
+									wcscat_s(tempTimeA, _T(" "));
+									DateTime_GetSystemtime(GetDlgItem(MyWnds::DialogProc_hwnd, tradeMomentATimeID), &tempTime);
+									_stprintf_s(_tempTCHAR, _T("%02d:%02d:%02d"), tempTime.wHour, tempTime.wMinute, tempTime.wSecond);
+									wcscat_s(tempTimeA, _tempTCHAR);
+									//终止时间
+									DateTime_GetSystemtime(GetDlgItem(MyWnds::DialogProc_hwnd, tradeDateBTimeID), &tempTime);
+									_stprintf_s(tempTimeB, _T("%04d-%02d-%02d"), tempTime.wYear, tempTime.wMonth, tempTime.wDay);
+									wcscat_s(tempTimeB, _T(" "));
+									DateTime_GetSystemtime(GetDlgItem(MyWnds::DialogProc_hwnd, tradeMomentBTimeID), &tempTime);
+									_stprintf_s(_tempTCHAR, _T("%02d:%02d:%02d"), tempTime.wHour, tempTime.wMinute, tempTime.wSecond);
+									wcscat_s(tempTimeB, _tempTCHAR);
 
+									//如果符合筛选条件，跳过该记录
+									if (_tcscmp(tempTCHAR,tempTimeA)>=0 && _tcscmp(tempTCHAR,tempTimeB)<=0) continue;
+									//不符合，删除记录
+									ListView_DeleteItem(GetDlgItem(Trade::TradeInfoProc_hwnd, dataInfoListID), yy);
+								}
+							}
+							else if (!_tcscmp(tempTCHAR, _T("按用户总消费"))) {
+								int itemCount = 0;
+								//增加新的一列--用户总消费
+								LVCOLUMN temp = { 0 };
+								temp.mask = LVCF_TEXT | LVCF_FMT | LVCF_WIDTH | LVCF_MINWIDTH | LVCF_SUBITEM | LVCF_DEFAULTWIDTH;
+								temp.fmt = LVCFMT_CENTER;
+								temp.cx = int(0.2 * MyWnds::homePageWidth);
+								temp.pszText = (LPTSTR)_T("用户总消费");
+								temp.iSubItem = 6;
+								temp.cxDefault = 1;
+								temp.cxMin = int(0.2 * MyWnds::homePageWidth);
+								ListView_InsertColumn(GetDlgItem(Trade::TradeInfoProc_hwnd, dataInfoListID), 6, &temp);
+								LVITEM tempINSERT = { 0 };
+								tempINSERT.mask = LVIF_TEXT;
+								for (int yy = ListView_GetItemCount(GetDlgItem(MyWnds::DialogProc_hwnd, userNameSelectListID)) - 1; yy >= 0; --yy) {
+									if (!ListView_GetCheckState(GetDlgItem(MyWnds::DialogProc_hwnd, selectListID), 0) || (ListView_GetCheckState(GetDlgItem(MyWnds::DialogProc_hwnd, selectListID), 0) && ListView_GetCheckState(GetDlgItem(MyWnds::DialogProc_hwnd, userNameSelectListID), yy))) {
+										//获取筛选列表中选定的用户名
+										UINT totalConsume = 0;
+										ListView_GetItemText(GetDlgItem(MyWnds::DialogProc_hwnd, userNameSelectListID), yy, 0, tempTCHAR, actUserName);
+										for (int yyy = ListView_GetItemCount(GetDlgItem(Trade::TradeInfoProc_hwnd, dataInfoListID)) - 1 - itemCount; yyy >= 0; --yyy) {
+											//获取当前记录的用户名
+											ListView_GetItemText(GetDlgItem(Trade::TradeInfoProc_hwnd, dataInfoListID), yyy, 3, _tempTCHAR, actUserName);
+											if (!_tcscmp(tempTCHAR, _tempTCHAR)) {
+												//获取交易金额
+												ListView_GetItemText(GetDlgItem(Trade::TradeInfoProc_hwnd, dataInfoListID), yyy, 2, _tempTCHAR, 11);
+												totalConsume += _wtoi(_tempTCHAR);
+												//记录完该交易数据便删除这条记录
+												ListView_DeleteItem(GetDlgItem(Trade::TradeInfoProc_hwnd, dataInfoListID), yyy);
+											}
+										}
+										//在列表末尾插入新的数据
+										tempINSERT.iItem = ListView_GetItemCount(GetDlgItem(Trade::TradeInfoProc_hwnd, dataInfoListID));
+										tempINSERT.iSubItem = 0;
+										_stprintf_s(_tempTCHAR, _T("%d"), 0);
+										tempINSERT.pszText = _tempTCHAR;
+										ListView_InsertItem(GetDlgItem(Trade::TradeInfoProc_hwnd, dataInfoListID), &tempINSERT);
+
+										//用户名
+										tempINSERT.iSubItem = 3;
+										tempINSERT.pszText = tempTCHAR;
+										ListView_SetItem(GetDlgItem(Trade::TradeInfoProc_hwnd, dataInfoListID), &tempINSERT);
+
+										//总消费
+										tempINSERT.iSubItem = 6;
+										_stprintf_s(_tempTCHAR, _T("%d"), totalConsume);
+										tempINSERT.pszText = _tempTCHAR;
+										ListView_SetItem(GetDlgItem(Trade::TradeInfoProc_hwnd, dataInfoListID), &tempINSERT);
+
+										
+										++itemCount;
+									}
+								}
+								//删除不需要的列
+								ListView_DeleteColumn(GetDlgItem(Trade::TradeInfoProc_hwnd, dataInfoListID), 5);//交易时间
+								ListView_DeleteColumn(GetDlgItem(Trade::TradeInfoProc_hwnd, dataInfoListID), 4);//设备ID
+								ListView_DeleteColumn(GetDlgItem(Trade::TradeInfoProc_hwnd, dataInfoListID), 2);//金额
+								ListView_DeleteColumn(GetDlgItem(Trade::TradeInfoProc_hwnd, dataInfoListID), 1);//交易ID
+								ListView_DeleteColumn(GetDlgItem(Trade::TradeInfoProc_hwnd, dataInfoListID), 0);//序号
+							}
+							else if (!_tcscmp(tempTCHAR, _T("按设备总收入"))) {
+								int itemCount = 0;
+								//增加新的一列--设备总收入
+								LVCOLUMN temp = { 0 };
+								temp.mask = LVCF_TEXT | LVCF_FMT | LVCF_WIDTH | LVCF_MINWIDTH | LVCF_SUBITEM | LVCF_DEFAULTWIDTH;
+								temp.fmt = LVCFMT_CENTER;
+								temp.cx = int(0.2 * MyWnds::homePageWidth);
+								temp.pszText = (LPTSTR)_T("设备总收入");
+								temp.iSubItem = 6;
+								temp.cxDefault = 1;
+								temp.cxMin = int(0.2 * MyWnds::homePageWidth);
+								ListView_InsertColumn(GetDlgItem(Trade::TradeInfoProc_hwnd, dataInfoListID), 6, &temp);
+								LVITEM tempINSERT = { 0 };
+								tempINSERT.mask = LVIF_TEXT;
+								for (int yy = ListView_GetItemCount(GetDlgItem(MyWnds::DialogProc_hwnd, devIDSelectListID)) - 1; yy >= 0; --yy) {
+									if (!ListView_GetCheckState(GetDlgItem(MyWnds::DialogProc_hwnd, selectListID), 1) || (ListView_GetCheckState(GetDlgItem(MyWnds::DialogProc_hwnd, selectListID), 1) && ListView_GetCheckState(GetDlgItem(MyWnds::DialogProc_hwnd, devIDSelectListID), yy))) {
+										//获取筛选列表中选定的设备ID
+										UINT totalIncome = 0;
+										ListView_GetItemText(GetDlgItem(MyWnds::DialogProc_hwnd, devIDSelectListID), yy, 0, tempTCHAR, devID);
+										for (int yyy = ListView_GetItemCount(GetDlgItem(Trade::TradeInfoProc_hwnd, dataInfoListID)) - 1 - itemCount; yyy >= 0; --yyy) {
+											//获取当前记录的设备ID
+											ListView_GetItemText(GetDlgItem(Trade::TradeInfoProc_hwnd, dataInfoListID), yyy, 4, _tempTCHAR, devID);
+											if (!_tcscmp(tempTCHAR, _tempTCHAR)) {
+												//获取交易金额
+												ListView_GetItemText(GetDlgItem(Trade::TradeInfoProc_hwnd, dataInfoListID), yyy, 2, _tempTCHAR, 11);
+												totalIncome += _wtoi(_tempTCHAR);
+												//记录完该交易数据便删除这条记录
+												ListView_DeleteItem(GetDlgItem(Trade::TradeInfoProc_hwnd, dataInfoListID), yyy);
+											}
+										}
+										//在列表末尾插入新的数据
+										tempINSERT.iItem = ListView_GetItemCount(GetDlgItem(Trade::TradeInfoProc_hwnd, dataInfoListID));
+										tempINSERT.iSubItem = 0;
+										_stprintf_s(_tempTCHAR, _T("%d"), 0);
+										tempINSERT.pszText = _tempTCHAR;
+										ListView_InsertItem(GetDlgItem(Trade::TradeInfoProc_hwnd, dataInfoListID), &tempINSERT);
+
+										//设备ID
+										tempINSERT.iSubItem = 4;
+										tempINSERT.pszText = tempTCHAR;
+										ListView_SetItem(GetDlgItem(Trade::TradeInfoProc_hwnd, dataInfoListID), &tempINSERT);
+
+										//总收入
+										tempINSERT.iSubItem = 6;
+										_stprintf_s(_tempTCHAR, _T("%d"), totalIncome);
+										tempINSERT.pszText = _tempTCHAR;
+										ListView_SetItem(GetDlgItem(Trade::TradeInfoProc_hwnd, dataInfoListID), &tempINSERT);
+
+
+										++itemCount;
+									}
+								}
+								//删除不需要的列
+								ListView_DeleteColumn(GetDlgItem(Trade::TradeInfoProc_hwnd, dataInfoListID), 5);//交易时间
+								ListView_DeleteColumn(GetDlgItem(Trade::TradeInfoProc_hwnd, dataInfoListID), 3);//用户名
+								ListView_DeleteColumn(GetDlgItem(Trade::TradeInfoProc_hwnd, dataInfoListID), 2);//金额
+								ListView_DeleteColumn(GetDlgItem(Trade::TradeInfoProc_hwnd, dataInfoListID), 1);//交易ID
+								ListView_DeleteColumn(GetDlgItem(Trade::TradeInfoProc_hwnd, dataInfoListID), 0);//序号
+
+							}
+						}
+					}
+
+
+
+
+
+
+					ShowWindow(GetDlgItem(Trade::TradeInfoProc_hwnd, tradeSelectSysLinkID), SW_HIDE);
+					ShowWindow(GetDlgItem(Trade::TradeInfoProc_hwnd, dataInfoSysLinkID), SW_HIDE);
+					//返回
+					CreateWindowEx(
+						0, _T("SysLink"), _T("<A HREF=\"返回\">返回</A>"), WS_CHILD | WS_VISIBLE | LWS_TRANSPARENT | WS_TABSTOP,
+						int(0.1 * MyWnds::homePageWidth), int(0.05 * MyWnds::homePageHeight), int(0.1 * MyWnds::homePageWidth), int(0.05 * MyWnds::homePageHeight),
+						Trade::TradeInfoProc_hwnd, HMENU(returnSysLinkID), MyWnds::hInstance, NULL
+					);
+					SendMessage(GetDlgItem(Trade::TradeInfoProc_hwnd, returnSysLinkID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
+
+					//使用主窗口
+					EnableWindow(MyWnds::MainWndProc_hwnd, TRUE);
+					//销毁窗口并发送WM_DESTROY消息
+					DestroyWindow(hwnd);
+					break;
+				}
 				}
 			}
 			break;
@@ -640,6 +900,15 @@ LRESULT CALLBACK MyWnds::DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM 
 		case dialogDevModify:
 			MyWnds::DialogDevModify();
 			break;
+		case dialogTradeAdd:
+			MyWnds::DialogTradeAdd();
+			break;
+		case dialogTradeModify:
+			MyWnds::DialogTradeModify();
+			break;
+		case dialogTradeSelect:
+			MyWnds::DialogTradeSelect();
+			break;
 		}
 	}
 	break;
@@ -660,7 +929,7 @@ void MyWnds::DialogActAdd() {
 	);
 	SendMessage(GetDlgItem(MyWnds::DialogProc_hwnd, actNameStaticID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
 	CreateWindowEx(
-		WS_EX_CLIENTEDGE, WC_EDIT, _T(""), WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL,
+		WS_EX_CLIENTEDGE, WC_EDIT, _T(""), WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL | WS_TABSTOP,
 		int(0.15 * DialogWidth), int(0.1 * DialogHeight), int(0.8 * DialogWidth), int(0.05 * DialogHeight),
 		MyWnds::DialogProc_hwnd, HMENU(actNameEditID), MyWnds::hInstance, NULL
 	);
@@ -675,7 +944,7 @@ void MyWnds::DialogActAdd() {
 	);
 	SendMessage(GetDlgItem(MyWnds::DialogProc_hwnd, userNameStaticID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
 	CreateWindowEx(
-		WS_EX_CLIENTEDGE, WC_EDIT, _T(""), WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL,
+		WS_EX_CLIENTEDGE, WC_EDIT, _T(""), WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL | WS_TABSTOP,
 		int(0.15 * DialogWidth), int(0.25 * DialogHeight), int(0.8 * DialogWidth), int(0.05 * DialogHeight),
 		MyWnds::DialogProc_hwnd, HMENU(userNameEditID), MyWnds::hInstance, NULL
 	);
@@ -690,7 +959,7 @@ void MyWnds::DialogActAdd() {
 	);
 	SendMessage(GetDlgItem(MyWnds::DialogProc_hwnd, passwdStaticID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
 	CreateWindowEx(
-		WS_EX_CLIENTEDGE, WC_EDIT, _T(""), WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL ,
+		WS_EX_CLIENTEDGE, WC_EDIT, _T(""), WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL | WS_TABSTOP,
 		int(0.15 * DialogWidth), int(0.4 * DialogHeight), int(0.8 * DialogWidth), int(0.05 * DialogHeight),
 		MyWnds::DialogProc_hwnd, HMENU(passwdEditID), MyWnds::hInstance, NULL
 	);
@@ -705,7 +974,7 @@ void MyWnds::DialogActAdd() {
 	);
 	SendMessage(GetDlgItem(MyWnds::DialogProc_hwnd, actPerStaticID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
 	CreateWindowEx(
-		WS_EX_CLIENTEDGE, WC_EDIT, _T(""), WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL | ES_NUMBER,
+		WS_EX_CLIENTEDGE, WC_EDIT, _T(""), WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL | ES_NUMBER | WS_TABSTOP,
 		int(0.15 * DialogWidth), int(0.55 * DialogHeight), int(0.8 * DialogWidth), int(0.05 * DialogHeight),
 		MyWnds::DialogProc_hwnd, HMENU(actPerEditID), MyWnds::hInstance, NULL
 	);
@@ -720,7 +989,7 @@ void MyWnds::DialogActAdd() {
 	);
 	SendMessage(GetDlgItem(MyWnds::DialogProc_hwnd, actCreditStaticID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
 	CreateWindowEx(
-		WS_EX_CLIENTEDGE, WC_EDIT, _T(""), WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL | ES_NUMBER,
+		WS_EX_CLIENTEDGE, WC_EDIT, _T(""), WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL | ES_NUMBER | WS_TABSTOP,
 		int(0.15 * DialogWidth), int(0.7 * DialogHeight), int(0.8 * DialogWidth), int(0.05 * DialogHeight),
 		MyWnds::DialogProc_hwnd, HMENU(actCreditEditID), MyWnds::hInstance, NULL
 	);
@@ -729,14 +998,14 @@ void MyWnds::DialogActAdd() {
 	SendMessage(GetDlgItem(MyWnds::DialogProc_hwnd, actCreditEditID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
 	//确认
 	CreateWindowEx(
-		0, WC_BUTTON, _T("确认"), WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+		0, WC_BUTTON, _T("确认"), WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP,
 		int(0.2 * DialogWidth), int(0.8 * DialogHeight), int(0.2 * DialogWidth), int(0.1 * DialogHeight),
 		MyWnds::DialogProc_hwnd, HMENU(confirmButtonID), MyWnds::hInstance, NULL
 	);
 	SendMessage(GetDlgItem(MyWnds::DialogProc_hwnd, confirmButtonID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
 	//取消
 	CreateWindowEx(
-		0, WC_BUTTON, _T("取消"), WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+		0, WC_BUTTON, _T("取消"), WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP,
 		int(0.6 * DialogWidth), int(0.8 * DialogHeight), int(0.2 * DialogWidth), int(0.1 * DialogHeight),
 		MyWnds::DialogProc_hwnd, HMENU(cancelButtonID), MyWnds::hInstance, NULL
 	);
@@ -764,7 +1033,7 @@ void MyWnds::DialogActModify() {
 	);
 	SendMessage(GetDlgItem(MyWnds::DialogProc_hwnd, actNameStaticID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
 	CreateWindowEx(
-		WS_EX_CLIENTEDGE, WC_EDIT, tempAct.mName, WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL,
+		WS_EX_CLIENTEDGE, WC_EDIT, tempAct.mName, WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL | WS_TABSTOP,
 		int(0.15 * DialogWidth), int(0.1 * DialogHeight), int(0.8 * DialogWidth), int(0.05 * DialogHeight),
 		MyWnds::DialogProc_hwnd, HMENU(actNameEditID), MyWnds::hInstance, NULL
 	);
@@ -779,7 +1048,7 @@ void MyWnds::DialogActModify() {
 	);
 	SendMessage(GetDlgItem(MyWnds::DialogProc_hwnd, userNameStaticID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
 	CreateWindowEx(
-		WS_EX_CLIENTEDGE, WC_EDIT, tempAct.mID, WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL,
+		WS_EX_CLIENTEDGE, WC_EDIT, tempAct.mID, WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL | WS_TABSTOP,
 		int(0.15 * DialogWidth), int(0.25 * DialogHeight), int(0.8 * DialogWidth), int(0.05 * DialogHeight),
 		MyWnds::DialogProc_hwnd, HMENU(userNameEditID), MyWnds::hInstance, NULL
 	);
@@ -793,7 +1062,7 @@ void MyWnds::DialogActModify() {
 	);
 	SendMessage(GetDlgItem(MyWnds::DialogProc_hwnd, passwdStaticID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
 	CreateWindowEx(
-		WS_EX_CLIENTEDGE, WC_EDIT, tempAct.mPasswd, WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL ,
+		WS_EX_CLIENTEDGE, WC_EDIT, tempAct.mPasswd, WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL | WS_TABSTOP,
 		int(0.15 * DialogWidth), int(0.4 * DialogHeight), int(0.8 * DialogWidth), int(0.05 * DialogHeight),
 		MyWnds::DialogProc_hwnd, HMENU(passwdEditID), MyWnds::hInstance, NULL
 	);
@@ -809,7 +1078,7 @@ void MyWnds::DialogActModify() {
 	SendMessage(GetDlgItem(MyWnds::DialogProc_hwnd, actPerStaticID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
 	_stprintf_s(tempTCHAR, _T("%d"), tempAct.mPer.mAdmin);
 	CreateWindowEx(
-		WS_EX_CLIENTEDGE, WC_EDIT, tempTCHAR, WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL | ES_NUMBER,
+		WS_EX_CLIENTEDGE, WC_EDIT, tempTCHAR, WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL | ES_NUMBER | WS_TABSTOP,
 		int(0.15 * DialogWidth), int(0.55 * DialogHeight), int(0.8 * DialogWidth), int(0.05 * DialogHeight),
 		MyWnds::DialogProc_hwnd, HMENU(actPerEditID), MyWnds::hInstance, NULL
 	);
@@ -825,7 +1094,7 @@ void MyWnds::DialogActModify() {
 	SendMessage(GetDlgItem(MyWnds::DialogProc_hwnd, actCreditStaticID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
 	_stprintf_s(tempTCHAR, _T("%d"), tempAct.mCredit);
 	CreateWindowEx(
-		WS_EX_CLIENTEDGE, WC_EDIT, tempTCHAR, WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL | ES_NUMBER,
+		WS_EX_CLIENTEDGE, WC_EDIT, tempTCHAR, WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL | ES_NUMBER | WS_TABSTOP,
 		int(0.15 * DialogWidth), int(0.7 * DialogHeight), int(0.8 * DialogWidth), int(0.05 * DialogHeight),
 		MyWnds::DialogProc_hwnd, HMENU(actCreditEditID), MyWnds::hInstance, NULL
 	);
@@ -834,14 +1103,14 @@ void MyWnds::DialogActModify() {
 	SendMessage(GetDlgItem(MyWnds::DialogProc_hwnd, actCreditEditID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
 	//确认
 	CreateWindowEx(
-		0, WC_BUTTON, _T("确认"), WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+		0, WC_BUTTON, _T("确认"), WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP,
 		int(0.2 * DialogWidth), int(0.8 * DialogHeight), int(0.2 * DialogWidth), int(0.1 * DialogHeight),
 		MyWnds::DialogProc_hwnd, HMENU(confirmButtonID), MyWnds::hInstance, NULL
 	);
 	SendMessage(GetDlgItem(MyWnds::DialogProc_hwnd, confirmButtonID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
 	//取消
 	CreateWindowEx(
-		0, WC_BUTTON, _T("取消"), WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+		0, WC_BUTTON, _T("取消"), WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP,
 		int(0.6 * DialogWidth), int(0.8 * DialogHeight), int(0.2 * DialogWidth), int(0.1 * DialogHeight),
 		MyWnds::DialogProc_hwnd, HMENU(cancelButtonID), MyWnds::hInstance, NULL
 	);
@@ -859,7 +1128,7 @@ void MyWnds::DialogDevAdd() {
 	);
 	SendMessage(GetDlgItem(MyWnds::DialogProc_hwnd, devNameStaticID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
 	CreateWindowEx(
-		WS_EX_CLIENTEDGE, WC_EDIT, _T(""), WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL,
+		WS_EX_CLIENTEDGE, WC_EDIT, _T(""), WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL | WS_TABSTOP,
 		int(0.15 * DialogWidth), int(0.1 * DialogHeight), int(0.8 * DialogWidth), int(0.05 * DialogHeight),
 		MyWnds::DialogProc_hwnd, HMENU(devNameEditID), MyWnds::hInstance, NULL
 	);
@@ -874,7 +1143,7 @@ void MyWnds::DialogDevAdd() {
 	);
 	SendMessage(GetDlgItem(MyWnds::DialogProc_hwnd, devIDStaticID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
 	CreateWindowEx(
-		WS_EX_CLIENTEDGE, WC_EDIT, _T(""), WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL,
+		WS_EX_CLIENTEDGE, WC_EDIT, _T(""), WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL | WS_TABSTOP,
 		int(0.15 * DialogWidth), int(0.25 * DialogHeight), int(0.8 * DialogWidth), int(0.05 * DialogHeight),
 		MyWnds::DialogProc_hwnd, HMENU(devIDEditID), MyWnds::hInstance, NULL
 	);
@@ -889,7 +1158,7 @@ void MyWnds::DialogDevAdd() {
 	);
 	SendMessage(GetDlgItem(MyWnds::DialogProc_hwnd, devPriceStaticID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
 	CreateWindowEx(
-		WS_EX_CLIENTEDGE, WC_EDIT, _T(""), WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL | ES_NUMBER,
+		WS_EX_CLIENTEDGE, WC_EDIT, _T(""), WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL | ES_NUMBER | WS_TABSTOP,
 		int(0.15 * DialogWidth), int(0.4 * DialogHeight), int(0.8 * DialogWidth), int(0.05 * DialogHeight),
 		MyWnds::DialogProc_hwnd, HMENU(devPriceEditID), MyWnds::hInstance, NULL
 	);
@@ -904,7 +1173,7 @@ void MyWnds::DialogDevAdd() {
 	);
 	SendMessage(GetDlgItem(MyWnds::DialogProc_hwnd, devChargeStaticID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
 	CreateWindowEx(
-		WS_EX_CLIENTEDGE, WC_EDIT, _T(""), WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL | ES_NUMBER,
+		WS_EX_CLIENTEDGE, WC_EDIT, _T(""), WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL | ES_NUMBER | WS_TABSTOP,
 		int(0.15 * DialogWidth), int(0.55 * DialogHeight), int(0.8 * DialogWidth), int(0.05 * DialogHeight),
 		MyWnds::DialogProc_hwnd, HMENU(devChargeEditID), MyWnds::hInstance, NULL
 	);
@@ -913,14 +1182,14 @@ void MyWnds::DialogDevAdd() {
 	SendMessage(GetDlgItem(MyWnds::DialogProc_hwnd, devChargeEditID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
 	//确认
 	CreateWindowEx(
-		0, WC_BUTTON, _T("确认"), WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+		0, WC_BUTTON, _T("确认"), WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP,
 		int(0.2 * DialogWidth), int(0.8 * DialogHeight), int(0.2 * DialogWidth), int(0.1 * DialogHeight),
 		MyWnds::DialogProc_hwnd, HMENU(confirmButtonID), MyWnds::hInstance, NULL
 	);
 	SendMessage(GetDlgItem(MyWnds::DialogProc_hwnd, confirmButtonID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
 	//取消
 	CreateWindowEx(
-		0, WC_BUTTON, _T("取消"), WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+		0, WC_BUTTON, _T("取消"), WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP,
 		int(0.6 * DialogWidth), int(0.8 * DialogHeight), int(0.2 * DialogWidth), int(0.1 * DialogHeight),
 		MyWnds::DialogProc_hwnd, HMENU(cancelButtonID), MyWnds::hInstance, NULL
 	);
@@ -948,7 +1217,7 @@ void MyWnds::DialogDevModify() {
 	);
 	SendMessage(GetDlgItem(MyWnds::DialogProc_hwnd, devNameStaticID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
 	CreateWindowEx(
-		WS_EX_CLIENTEDGE, WC_EDIT, tempDev.mName, WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL,
+		WS_EX_CLIENTEDGE, WC_EDIT, tempDev.mName, WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL | WS_TABSTOP,
 		int(0.15 * DialogWidth), int(0.1 * DialogHeight), int(0.8 * DialogWidth), int(0.05 * DialogHeight),
 		MyWnds::DialogProc_hwnd, HMENU(devNameEditID), MyWnds::hInstance, NULL
 	);
@@ -963,7 +1232,7 @@ void MyWnds::DialogDevModify() {
 	);
 	SendMessage(GetDlgItem(MyWnds::DialogProc_hwnd, devIDStaticID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
 	CreateWindowEx(
-		WS_EX_CLIENTEDGE, WC_EDIT, tempDev.mID, WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL,
+		WS_EX_CLIENTEDGE, WC_EDIT, tempDev.mID, WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL | WS_TABSTOP,
 		int(0.15 * DialogWidth), int(0.25 * DialogHeight), int(0.8 * DialogWidth), int(0.05 * DialogHeight),
 		MyWnds::DialogProc_hwnd, HMENU(devIDEditID), MyWnds::hInstance, NULL
 	);
@@ -978,7 +1247,7 @@ void MyWnds::DialogDevModify() {
 	SendMessage(GetDlgItem(MyWnds::DialogProc_hwnd, devPriceStaticID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
 	_stprintf_s(tempTCHAR, _T("%d"), tempDev.mPrice);
 	CreateWindowEx(
-		WS_EX_CLIENTEDGE, WC_EDIT, tempTCHAR, WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL | ES_NUMBER,
+		WS_EX_CLIENTEDGE, WC_EDIT, tempTCHAR, WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL | ES_NUMBER | WS_TABSTOP,
 		int(0.15 * DialogWidth), int(0.4 * DialogHeight), int(0.8 * DialogWidth), int(0.05 * DialogHeight),
 		MyWnds::DialogProc_hwnd, HMENU(devPriceEditID), MyWnds::hInstance, NULL
 	);
@@ -994,7 +1263,7 @@ void MyWnds::DialogDevModify() {
 	SendMessage(GetDlgItem(MyWnds::DialogProc_hwnd, devChargeStaticID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
 	_stprintf_s(tempTCHAR, _T("%d"), tempDev.mCharge);
 	CreateWindowEx(
-		WS_EX_CLIENTEDGE, WC_EDIT, tempTCHAR, WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL | ES_NUMBER,
+		WS_EX_CLIENTEDGE, WC_EDIT, tempTCHAR, WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL | ES_NUMBER | WS_TABSTOP,
 		int(0.15 * DialogWidth), int(0.55 * DialogHeight), int(0.8 * DialogWidth), int(0.05 * DialogHeight),
 		MyWnds::DialogProc_hwnd, HMENU(devChargeEditID), MyWnds::hInstance, NULL
 	);
@@ -1003,26 +1272,447 @@ void MyWnds::DialogDevModify() {
 	SendMessage(GetDlgItem(MyWnds::DialogProc_hwnd, devChargeEditID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
 	//确认
 	CreateWindowEx(
-		0, WC_BUTTON, _T("确认"), WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+		0, WC_BUTTON, _T("确认"), WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP,
 		int(0.2 * DialogWidth), int(0.8 * DialogHeight), int(0.2 * DialogWidth), int(0.1 * DialogHeight),
 		MyWnds::DialogProc_hwnd, HMENU(confirmButtonID), MyWnds::hInstance, NULL
 	);
 	SendMessage(GetDlgItem(MyWnds::DialogProc_hwnd, confirmButtonID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
 	//取消
 	CreateWindowEx(
-		0, WC_BUTTON, _T("取消"), WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+		0, WC_BUTTON, _T("取消"), WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP,
 		int(0.6 * DialogWidth), int(0.8 * DialogHeight), int(0.2 * DialogWidth), int(0.1 * DialogHeight),
 		MyWnds::DialogProc_hwnd, HMENU(cancelButtonID), MyWnds::hInstance, NULL
 	);
 	SendMessage(GetDlgItem(MyWnds::DialogProc_hwnd, cancelButtonID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
 }
 
+void MyWnds::DialogTradeAdd(){
+	int DialogWidth = int(0.7 * MyWnds::defMainWndHeight), DialogHeight = int(0.8 * MyWnds::defMainWndHeight);
+	//交易ID
+	CreateWindowEx(
+		0, WC_STATIC, _T("交易ID"), WS_CHILD | WS_VISIBLE | SS_SIMPLE,
+		int(0.04 * DialogWidth), int(0.11 * DialogHeight), int(0.1 * DialogWidth), int(0.05 * DialogHeight),
+		MyWnds::DialogProc_hwnd, HMENU(tradeIDStaticID), MyWnds::hInstance, NULL
+	);
+	SendMessage(GetDlgItem(MyWnds::DialogProc_hwnd, tradeIDStaticID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
+	CreateWindowEx(
+		WS_EX_CLIENTEDGE, WC_EDIT, _T(""), WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL | WS_TABSTOP,
+		int(0.15 * DialogWidth), int(0.1 * DialogHeight), int(0.8 * DialogWidth), int(0.05 * DialogHeight),
+		MyWnds::DialogProc_hwnd, HMENU(tradeIDEditID), MyWnds::hInstance, NULL
+	);
+	Edit_SetCueBannerText(GetDlgItem(MyWnds::DialogProc_hwnd, tradeIDEditID), _T("请输入交易ID"));//设置编辑控件中的文本提示
+	Edit_LimitText(GetDlgItem(MyWnds::DialogProc_hwnd, tradeIDEditID), tradeID - 1); //限制可在编辑控件中输入的交易ID的长度
+	SendMessage(GetDlgItem(MyWnds::DialogProc_hwnd, tradeIDEditID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
+	//交易金额
+	CreateWindowEx(
+		0, WC_STATIC, _T("金额"), WS_CHILD | WS_VISIBLE | SS_SIMPLE,
+		int(0.05 * DialogWidth), int(0.26 * DialogHeight), int(0.12 * DialogWidth), int(0.05 * DialogHeight),
+		MyWnds::DialogProc_hwnd, HMENU(tradeMoneyStaticID), MyWnds::hInstance, NULL
+	);
+	SendMessage(GetDlgItem(MyWnds::DialogProc_hwnd, tradeMoneyStaticID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
+	CreateWindowEx(
+		WS_EX_CLIENTEDGE, WC_EDIT, _T(""), WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL | ES_NUMBER | WS_TABSTOP,
+		int(0.15 * DialogWidth), int(0.25 * DialogHeight), int(0.8 * DialogWidth), int(0.05 * DialogHeight),
+		MyWnds::DialogProc_hwnd, HMENU(tradeMoneyEditID), MyWnds::hInstance, NULL
+	);
+	Edit_SetCueBannerText(GetDlgItem(MyWnds::DialogProc_hwnd, tradeMoneyEditID), _T("请输入交易金额"));//设置编辑控件中的文本提示
+	Edit_LimitText(GetDlgItem(MyWnds::DialogProc_hwnd, tradeMoneyEditID), 10); //限制可在编辑控件中输入的交易金额的长度
+	SendMessage(GetDlgItem(MyWnds::DialogProc_hwnd, tradeMoneyEditID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
+	//用户名
+	CreateWindowEx(
+		0, WC_STATIC, _T("用户名"), WS_CHILD | WS_VISIBLE | SS_SIMPLE,
+		int(0.04 * DialogWidth), int(0.41 * DialogHeight), int(0.1 * DialogWidth), int(0.05 * DialogHeight),
+		MyWnds::DialogProc_hwnd, HMENU(userNameStaticID), MyWnds::hInstance, NULL
+	);
+	SendMessage(GetDlgItem(MyWnds::DialogProc_hwnd, userNameStaticID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
+	CreateWindowEx(
+		0, WC_COMBOBOX, _T(""), WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST| WS_VSCROLL,
+		int(0.15 * DialogWidth), int(0.4 * DialogHeight), int(0.5 * DialogWidth), int(0.05 * DialogHeight),
+		MyWnds::DialogProc_hwnd, HMENU(userNameComboBoxID), MyWnds::hInstance, NULL
+	);
+	SendMessage(GetDlgItem(MyWnds::DialogProc_hwnd, userNameComboBoxID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
+	//向组合框中添加所有用户信息
+	Account tempAct;//存放将要读取的用户数据
+	DWORD tempDWORD = 0;//存放实际读取的字节数
+	HANDLE tempHANDLE = CreateFile(_T("Account.dat"), GENERIC_READ, NULL, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);//打开文件
+	for (int x = 0; true; ++x) {
+		ReadFile(tempHANDLE, &tempAct, sizeof(Account), &tempDWORD, NULL);//读取文件
+		if (!tempDWORD)break;
+		ComboBox_AddString(GetDlgItem(MyWnds::DialogProc_hwnd, userNameComboBoxID), tempAct.mID);
+	}
+	CloseHandle(tempHANDLE);//关闭文件
+	//设备ID
+	CreateWindowEx(
+		0, WC_STATIC, _T("设备ID"), WS_CHILD | WS_VISIBLE | SS_SIMPLE,
+		int(0.04 * DialogWidth), int(0.56 * DialogHeight), int(0.1 * DialogWidth), int(0.05 * DialogHeight),
+		MyWnds::DialogProc_hwnd, HMENU(devIDStaticID), MyWnds::hInstance, NULL
+	);
+	SendMessage(GetDlgItem(MyWnds::DialogProc_hwnd, devIDStaticID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
+	CreateWindowEx(
+		0, WC_COMBOBOX, _T(""), WS_CHILD | WS_VISIBLE  | CBS_DROPDOWNLIST| WS_VSCROLL,
+		int(0.15 * DialogWidth), int(0.55 * DialogHeight), int(0.5 * DialogWidth), int(0.05 * DialogHeight),
+		MyWnds::DialogProc_hwnd, HMENU(devIDComboBoxID), MyWnds::hInstance, NULL
+	);
+	SendMessage(GetDlgItem(MyWnds::DialogProc_hwnd, devIDComboBoxID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
+	Device tempDev;//存放将要读取的设备数据
+	tempHANDLE = CreateFile(_T("Device.dat"), GENERIC_READ, NULL, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);//打开文件
+	for (int x = 0; true; ++x) {
+		ReadFile(tempHANDLE, &tempDev, sizeof(Device), &tempDWORD, NULL);//读取文件
+		if (!tempDWORD)break;
+		ComboBox_AddString(GetDlgItem(MyWnds::DialogProc_hwnd, devIDComboBoxID), tempDev.mID);
+	}
+	CloseHandle(tempHANDLE);//关闭文件
+	//交易时间
+	CreateWindowEx(
+		0, WC_STATIC, _T("交易时间"), WS_CHILD | WS_VISIBLE | SS_SIMPLE,
+		int(0.02 * DialogWidth), int(0.71 * DialogHeight), int(0.17 * DialogWidth), int(0.05 * DialogHeight),
+		MyWnds::DialogProc_hwnd, HMENU(tradeTimeAStaticID), MyWnds::hInstance, NULL
+	);
+	SendMessage(GetDlgItem(MyWnds::DialogProc_hwnd, tradeTimeAStaticID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
+	//日期
+	CreateWindowEx(
+		0, DATETIMEPICK_CLASS, _T(""), WS_CHILD | WS_VISIBLE ,
+		int(0.2 * DialogWidth), int(0.7 * DialogHeight), int(0.27 * DialogWidth), int(0.05 * DialogHeight),
+		MyWnds::DialogProc_hwnd, HMENU(tradeDateATimeID), MyWnds::hInstance, NULL
+	);
+	SendMessage(GetDlgItem(MyWnds::DialogProc_hwnd, tradeDateATimeID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
+	//时刻
+	CreateWindowEx(
+		0, DATETIMEPICK_CLASS, _T(""), WS_CHILD | WS_VISIBLE | DTS_TIMEFORMAT,
+		int(0.52 * DialogWidth), int(0.7 * DialogHeight), int(0.27 * DialogWidth), int(0.05 * DialogHeight),
+		MyWnds::DialogProc_hwnd, HMENU(tradeMomentATimeID), MyWnds::hInstance, NULL
+	);
+	SendMessage(GetDlgItem(MyWnds::DialogProc_hwnd, tradeMomentATimeID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
+	//确认
+	CreateWindowEx(
+		0, WC_BUTTON, _T("确认"), WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP,
+		int(0.2 * DialogWidth), int(0.8 * DialogHeight), int(0.2 * DialogWidth), int(0.1 * DialogHeight),
+		MyWnds::DialogProc_hwnd, HMENU(confirmButtonID), MyWnds::hInstance, NULL
+	);
+	SendMessage(GetDlgItem(MyWnds::DialogProc_hwnd, confirmButtonID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
+	//取消
+	CreateWindowEx(
+		0, WC_BUTTON, _T("取消"), WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP,
+		int(0.6 * DialogWidth), int(0.8 * DialogHeight), int(0.2 * DialogWidth), int(0.1 * DialogHeight),
+		MyWnds::DialogProc_hwnd, HMENU(cancelButtonID), MyWnds::hInstance, NULL
+	);
+	SendMessage(GetDlgItem(MyWnds::DialogProc_hwnd, cancelButtonID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
+}
+
+void MyWnds::DialogTradeModify(){
+	int DialogWidth = int(0.7 * MyWnds::defMainWndHeight), DialogHeight = int(0.8 * MyWnds::defMainWndHeight);
+	Trade tempTrade = { 0 };//存放将要读取的交易数据
+	DWORD tempDWORD = 0;//存放实际读取的字节数
+	TCHAR tempTCHAR[21] = {};
+	//获取点击位置的交易记录
+	HANDLE tempHANDLE = CreateFile(_T("Trade.dat"), GENERIC_READ, NULL, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);//打开文件
+	//文件指针移动到该交易数据之前
+	LARGE_INTEGER tempL_I;
+	tempL_I.QuadPart = (long long)(sizeof(Trade)) * MyWnds::y_Listview;
+	SetFilePointerEx(tempHANDLE, tempL_I, NULL, FILE_BEGIN);
+	ReadFile(tempHANDLE, &tempTrade, sizeof(Trade), &tempDWORD, NULL);//读取文件
+	CloseHandle(tempHANDLE);//关闭文件
+	//交易ID
+	CreateWindowEx(
+		0, WC_STATIC, _T("交易ID"), WS_CHILD | WS_VISIBLE | SS_SIMPLE,
+		int(0.04 * DialogWidth), int(0.11 * DialogHeight), int(0.1 * DialogWidth), int(0.05 * DialogHeight),
+		MyWnds::DialogProc_hwnd, HMENU(tradeIDStaticID), MyWnds::hInstance, NULL
+	);
+	SendMessage(GetDlgItem(MyWnds::DialogProc_hwnd, tradeIDStaticID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
+	CreateWindowEx(
+		WS_EX_CLIENTEDGE, WC_EDIT, tempTrade.mID, WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL | WS_TABSTOP | ES_READONLY,
+		int(0.15 * DialogWidth), int(0.1 * DialogHeight), int(0.8 * DialogWidth), int(0.05 * DialogHeight),
+		MyWnds::DialogProc_hwnd, HMENU(tradeIDEditID), MyWnds::hInstance, NULL
+	);
+	SendMessage(GetDlgItem(MyWnds::DialogProc_hwnd, tradeIDEditID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
+	//交易金额
+	CreateWindowEx(
+		0, WC_STATIC, _T("金额"), WS_CHILD | WS_VISIBLE | SS_SIMPLE,
+		int(0.05 * DialogWidth), int(0.26 * DialogHeight), int(0.12 * DialogWidth), int(0.05 * DialogHeight),
+		MyWnds::DialogProc_hwnd, HMENU(tradeMoneyStaticID), MyWnds::hInstance, NULL
+	);
+	SendMessage(GetDlgItem(MyWnds::DialogProc_hwnd, tradeMoneyStaticID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
+	_stprintf_s(tempTCHAR, _T("%d"), tempTrade.mMoney);
+	CreateWindowEx(
+		WS_EX_CLIENTEDGE, WC_EDIT, tempTCHAR, WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL | ES_NUMBER | WS_TABSTOP,
+		int(0.15 * DialogWidth), int(0.25 * DialogHeight), int(0.8 * DialogWidth), int(0.05 * DialogHeight),
+		MyWnds::DialogProc_hwnd, HMENU(tradeMoneyEditID), MyWnds::hInstance, NULL
+	);
+	Edit_SetCueBannerText(GetDlgItem(MyWnds::DialogProc_hwnd, tradeMoneyEditID), _T("请输入交易金额"));//设置编辑控件中的文本提示
+	Edit_LimitText(GetDlgItem(MyWnds::DialogProc_hwnd, tradeMoneyEditID), 10); //限制可在编辑控件中输入的交易金额的长度
+	SendMessage(GetDlgItem(MyWnds::DialogProc_hwnd, tradeMoneyEditID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
+	//用户名
+	CreateWindowEx(
+		0, WC_STATIC, _T("用户名"), WS_CHILD | WS_VISIBLE | SS_SIMPLE,
+		int(0.04 * DialogWidth), int(0.41 * DialogHeight), int(0.1 * DialogWidth), int(0.05 * DialogHeight),
+		MyWnds::DialogProc_hwnd, HMENU(userNameStaticID), MyWnds::hInstance, NULL
+	);
+	SendMessage(GetDlgItem(MyWnds::DialogProc_hwnd, userNameStaticID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
+	CreateWindowEx(
+		0, WC_COMBOBOX, _T(""), WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | WS_VSCROLL,
+		int(0.15 * DialogWidth), int(0.4 * DialogHeight), int(0.5 * DialogWidth), int(0.05 * DialogHeight),
+		MyWnds::DialogProc_hwnd, HMENU(userNameComboBoxID), MyWnds::hInstance, NULL
+	);
+	SendMessage(GetDlgItem(MyWnds::DialogProc_hwnd, userNameComboBoxID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
+	//向组合框中添加所有用户信息
+	Account tempAct;//存放将要读取的用户数据
+	tempDWORD = 0;//存放实际读取的字节数
+	int index = 0;//记录所选数据的索引
+	tempHANDLE = CreateFile(_T("Account.dat"), GENERIC_READ, NULL, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);//打开文件
+	for (int x = 0; true; ++x) {
+		ReadFile(tempHANDLE, &tempAct, sizeof(Account), &tempDWORD, NULL);//读取文件
+		if (!tempDWORD)break;
+		ComboBox_AddString(GetDlgItem(MyWnds::DialogProc_hwnd, userNameComboBoxID), tempAct.mID);
+		if (!_tcscmp(tempAct.mID, tempTrade.mUserName)) index = x;
+	}
+	CloseHandle(tempHANDLE);//关闭文件
+	ComboBox_SetCurSel(GetDlgItem(MyWnds::DialogProc_hwnd, userNameComboBoxID), index);
+	//设备ID
+	CreateWindowEx(
+		0, WC_STATIC, _T("设备ID"), WS_CHILD | WS_VISIBLE | SS_SIMPLE,
+		int(0.04 * DialogWidth), int(0.56 * DialogHeight), int(0.1 * DialogWidth), int(0.05 * DialogHeight),
+		MyWnds::DialogProc_hwnd, HMENU(devIDStaticID), MyWnds::hInstance, NULL
+	);
+	SendMessage(GetDlgItem(MyWnds::DialogProc_hwnd, devIDStaticID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
+	CreateWindowEx(
+		0, WC_COMBOBOX, _T(""), WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | WS_VSCROLL,
+		int(0.15 * DialogWidth), int(0.55 * DialogHeight), int(0.5 * DialogWidth), int(0.05 * DialogHeight),
+		MyWnds::DialogProc_hwnd, HMENU(devIDComboBoxID), MyWnds::hInstance, NULL
+	);
+	SendMessage(GetDlgItem(MyWnds::DialogProc_hwnd, devIDComboBoxID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
+	Device tempDev;//存放将要读取的设备数据
+	tempHANDLE = CreateFile(_T("Device.dat"), GENERIC_READ, NULL, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);//打开文件
+	for (int x = 0; true; ++x) {
+		ReadFile(tempHANDLE, &tempDev, sizeof(Device), &tempDWORD, NULL);//读取文件
+		if (!tempDWORD)break;
+		ComboBox_AddString(GetDlgItem(MyWnds::DialogProc_hwnd, devIDComboBoxID), tempDev.mID);
+		if (!_tcscmp(tempDev.mID, tempTrade.mDevID)) index = x;
+	}
+	CloseHandle(tempHANDLE);//关闭文件
+	ComboBox_SetCurSel(GetDlgItem(MyWnds::DialogProc_hwnd, devIDComboBoxID), index);
+	//交易时间
+	CreateWindowEx(
+		0, WC_STATIC, _T("交易时间"), WS_CHILD | WS_VISIBLE | SS_SIMPLE,
+		int(0.02 * DialogWidth), int(0.71 * DialogHeight), int(0.17 * DialogWidth), int(0.05 * DialogHeight),
+		MyWnds::DialogProc_hwnd, HMENU(tradeTimeAStaticID), MyWnds::hInstance, NULL
+	);
+	SendMessage(GetDlgItem(MyWnds::DialogProc_hwnd, tradeTimeAStaticID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
+	//日期
+	CreateWindowEx(
+		0, DATETIMEPICK_CLASS, _T(""), WS_CHILD | WS_VISIBLE,
+		int(0.2 * DialogWidth), int(0.7 * DialogHeight), int(0.27 * DialogWidth), int(0.05 * DialogHeight),
+		MyWnds::DialogProc_hwnd, HMENU(tradeDateATimeID), MyWnds::hInstance, NULL
+	);
+	SendMessage(GetDlgItem(MyWnds::DialogProc_hwnd, tradeDateATimeID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
+	SYSTEMTIME tempTime = {0};
+	tempTime.wYear = _wtoi(tempTrade.mTime.mDate);
+	tempTime.wMonth = _wtoi(tempTrade.mTime.mDate + 5);
+	tempTime.wDay = _wtoi(tempTrade.mTime.mDate + 8);
+	tempTime.wHour = _wtoi(tempTrade.mTime.mMoment);
+	tempTime.wMinute = _wtoi(tempTrade.mTime.mMoment + 3);
+	tempTime.wSecond = _wtoi(tempTrade.mTime.mMoment + 6);
+	DateTime_SetSystemtime(GetDlgItem(MyWnds::DialogProc_hwnd, tradeDateATimeID), GDT_VALID, &tempTime);
+	//时刻
+	CreateWindowEx(
+		0, DATETIMEPICK_CLASS, _T(""), WS_CHILD | WS_VISIBLE | DTS_TIMEFORMAT,
+		int(0.52 * DialogWidth), int(0.7 * DialogHeight), int(0.27 * DialogWidth), int(0.05 * DialogHeight),
+		MyWnds::DialogProc_hwnd, HMENU(tradeMomentATimeID), MyWnds::hInstance, NULL
+	);
+	SendMessage(GetDlgItem(MyWnds::DialogProc_hwnd, tradeMomentATimeID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
+	DateTime_SetSystemtime(GetDlgItem(MyWnds::DialogProc_hwnd, tradeMomentATimeID), GDT_VALID, &tempTime);
+	//确认
+	CreateWindowEx(
+		0, WC_BUTTON, _T("确认"), WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP,
+		int(0.2 * DialogWidth), int(0.8 * DialogHeight), int(0.2 * DialogWidth), int(0.1 * DialogHeight),
+		MyWnds::DialogProc_hwnd, HMENU(confirmButtonID), MyWnds::hInstance, NULL
+	);
+	SendMessage(GetDlgItem(MyWnds::DialogProc_hwnd, confirmButtonID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
+	//取消
+	CreateWindowEx(
+		0, WC_BUTTON, _T("取消"), WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP,
+		int(0.6 * DialogWidth), int(0.8 * DialogHeight), int(0.2 * DialogWidth), int(0.1 * DialogHeight),
+		MyWnds::DialogProc_hwnd, HMENU(cancelButtonID), MyWnds::hInstance, NULL
+	);
+	SendMessage(GetDlgItem(MyWnds::DialogProc_hwnd, cancelButtonID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
+}
+
+void MyWnds::DialogTradeSelect(){
+	int DialogWidth = int(0.7 * MyWnds::defMainWndWidth), DialogHeight = int(0.8 * MyWnds::defMainWndHeight);
+	
+	//筛选选项
+	CreateWindowEx(
+		0, WC_LISTVIEW, _T(""), WS_CHILD | WS_VISIBLE | WS_BORDER | WS_VSCROLL | WS_HSCROLL | LVS_REPORT | LVS_SHOWSELALWAYS,
+		int(0.1 * DialogWidth), int(0.05 * DialogHeight), int(0.2 * DialogWidth), int(0.25 * DialogHeight),
+		MyWnds::DialogProc_hwnd, (HMENU)selectListID, MyWnds::hInstance, NULL
+	);
+	SendMessage(GetDlgItem(MyWnds::DialogProc_hwnd, selectListID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
+	ListView_SetExtendedListViewStyle(GetDlgItem(MyWnds::DialogProc_hwnd, selectListID), LVS_EX_COLUMNSNAPPOINTS | LVS_EX_CHECKBOXES | LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES);
+	//插入列
+	LVCOLUMN temp = { 0 };
+	temp.mask = LVCF_TEXT | LVCF_FMT | LVCF_WIDTH | LVCF_MINWIDTH | LVCF_SUBITEM | LVCF_DEFAULTWIDTH;
+	temp.fmt = LVCFMT_CENTER;
+	temp.cx = int(0.2 * DialogWidth);
+	temp.pszText = (LPTSTR)_T("筛选选项");
+	temp.iSubItem = 0;
+	temp.cxDefault = 0;
+	temp.cxMin = int(0.2 * DialogWidth);
+	ListView_InsertColumn(GetDlgItem(MyWnds::DialogProc_hwnd, selectListID), 0, &temp);
+	//插入行
+	LVITEM tempINSERT = { 0 };
+	tempINSERT.mask = LVIF_TEXT;
+	tempINSERT.iItem = 0;
+	tempINSERT.iSubItem = 0;
+	tempINSERT.pszText = (LPTSTR)_T("按用户");
+	ListView_InsertItem(GetDlgItem(MyWnds::DialogProc_hwnd, selectListID), &tempINSERT);
+
+	++tempINSERT.iItem;
+	tempINSERT.pszText = (LPTSTR)_T("按设备");
+	ListView_InsertItem(GetDlgItem(MyWnds::DialogProc_hwnd, selectListID), &tempINSERT);
+
+	++tempINSERT.iItem;
+	tempINSERT.pszText = (LPTSTR)_T("按时间");
+	ListView_InsertItem(GetDlgItem(MyWnds::DialogProc_hwnd, selectListID), &tempINSERT);
+
+	++tempINSERT.iItem;
+	tempINSERT.pszText = (LPTSTR)_T("按用户总消费");
+	ListView_InsertItem(GetDlgItem(MyWnds::DialogProc_hwnd, selectListID), &tempINSERT);
+
+	++tempINSERT.iItem;
+	tempINSERT.pszText = (LPTSTR)_T("按设备总收入");
+	ListView_InsertItem(GetDlgItem(MyWnds::DialogProc_hwnd, selectListID), &tempINSERT);
+
+	//起始时间
+	CreateWindowEx(
+		0, WC_STATIC, _T("起始时间"), WS_CHILD | WS_VISIBLE | SS_SIMPLE,
+		int(0.1 * DialogWidth), int(0.33 * DialogHeight), int(0.17 * DialogWidth), int(0.05 * DialogHeight),
+		MyWnds::DialogProc_hwnd, HMENU(tradeTimeAStaticID), MyWnds::hInstance, NULL
+	);
+	SendMessage(GetDlgItem(MyWnds::DialogProc_hwnd, tradeTimeAStaticID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
+	//日期
+	CreateWindowEx(
+		0, DATETIMEPICK_CLASS, _T(""), WS_CHILD | WS_VISIBLE,
+		int(0.1 * DialogWidth), int(0.37 * DialogHeight), int(0.2 * DialogWidth), int(0.05 * DialogHeight),
+		MyWnds::DialogProc_hwnd, HMENU(tradeDateATimeID), MyWnds::hInstance, NULL
+	);
+	SendMessage(GetDlgItem(MyWnds::DialogProc_hwnd, tradeDateATimeID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
+	//时刻
+	CreateWindowEx(
+		0, DATETIMEPICK_CLASS, _T(""), WS_CHILD | WS_VISIBLE | DTS_TIMEFORMAT,
+		int(0.1 * DialogWidth), int(0.42 * DialogHeight), int(0.2 * DialogWidth), int(0.05 * DialogHeight),
+		MyWnds::DialogProc_hwnd, HMENU(tradeMomentATimeID), MyWnds::hInstance, NULL
+	);
+	SendMessage(GetDlgItem(MyWnds::DialogProc_hwnd, tradeMomentATimeID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
+	//终止时间
+	CreateWindowEx(
+		0, WC_STATIC, _T("终止时间"), WS_CHILD | WS_VISIBLE | SS_SIMPLE,
+		int(0.1 * DialogWidth), int(0.48 * DialogHeight), int(0.17 * DialogWidth), int(0.05 * DialogHeight),
+		MyWnds::DialogProc_hwnd, HMENU(tradeTimeBStaticID), MyWnds::hInstance, NULL
+	);
+	SendMessage(GetDlgItem(MyWnds::DialogProc_hwnd, tradeTimeBStaticID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
+	//日期
+	CreateWindowEx(
+		0, DATETIMEPICK_CLASS, _T(""), WS_CHILD | WS_VISIBLE,
+		int(0.1 * DialogWidth), int(0.52 * DialogHeight), int(0.2 * DialogWidth), int(0.05 * DialogHeight),
+		MyWnds::DialogProc_hwnd, HMENU(tradeDateBTimeID), MyWnds::hInstance, NULL
+	);
+	SendMessage(GetDlgItem(MyWnds::DialogProc_hwnd, tradeDateBTimeID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
+	//时刻
+	CreateWindowEx(
+		0, DATETIMEPICK_CLASS, _T(""), WS_CHILD | WS_VISIBLE | DTS_TIMEFORMAT,
+		int(0.1 * DialogWidth), int(0.57 * DialogHeight), int(0.2 * DialogWidth), int(0.05 * DialogHeight),
+		MyWnds::DialogProc_hwnd, HMENU(tradeMomentBTimeID), MyWnds::hInstance, NULL
+	);
+	SendMessage(GetDlgItem(MyWnds::DialogProc_hwnd, tradeMomentBTimeID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
+
+
+	//用户名
+	CreateWindowEx(
+		0, WC_LISTVIEW, _T(""), WS_CHILD | WS_VISIBLE | WS_BORDER | WS_VSCROLL | WS_HSCROLL | LVS_REPORT | LVS_SHOWSELALWAYS,
+		int(0.4 * DialogWidth), int(0.05 * DialogHeight), int(0.2 * DialogWidth), int(0.8 * DialogHeight),
+		MyWnds::DialogProc_hwnd, (HMENU)userNameSelectListID, MyWnds::hInstance, NULL
+	);
+	SendMessage(GetDlgItem(MyWnds::DialogProc_hwnd, userNameSelectListID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
+	ListView_SetExtendedListViewStyle(GetDlgItem(MyWnds::DialogProc_hwnd, userNameSelectListID), LVS_EX_COLUMNSNAPPOINTS | LVS_EX_CHECKBOXES | LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES);
+	//插入列
+	temp.pszText = (LPTSTR)_T("用户名");
+	temp.cxDefault = 0;
+	ListView_InsertColumn(GetDlgItem(MyWnds::DialogProc_hwnd, userNameSelectListID), 0, &temp);
+	Account tempAct;//存放将要读取的用户数据
+	DWORD tempDWORD = 0;//存放实际读取的字节数
+	int index = 0;//记录所选数据的索引
+	HANDLE tempHANDLE = CreateFile(_T("Account.dat"), GENERIC_READ, NULL, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);//打开文件
+	for (int x = 0; true; ++x) {
+		ReadFile(tempHANDLE, &tempAct, sizeof(Account), &tempDWORD, NULL);//读取文件
+		if (!tempDWORD)break;
+		tempINSERT.iItem = x;
+		tempINSERT.iSubItem = 0;
+		tempINSERT.pszText = tempAct.mID;
+		ListView_InsertItem(GetDlgItem(MyWnds::DialogProc_hwnd, userNameSelectListID), &tempINSERT);
+	}
+	CloseHandle(tempHANDLE);//关闭文件
+
+
+	//设备ID
+	CreateWindowEx(
+		0, WC_LISTVIEW, _T(""), WS_CHILD | WS_VISIBLE | WS_BORDER | WS_VSCROLL | WS_HSCROLL | LVS_REPORT | LVS_SHOWSELALWAYS,
+		int(0.7 * DialogWidth), int(0.05 * DialogHeight), int(0.2 * DialogWidth), int(0.8 * DialogHeight),
+		MyWnds::DialogProc_hwnd, (HMENU)devIDSelectListID, MyWnds::hInstance, NULL
+	);
+	SendMessage(GetDlgItem(MyWnds::DialogProc_hwnd, devIDSelectListID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
+	ListView_SetExtendedListViewStyle(GetDlgItem(MyWnds::DialogProc_hwnd, devIDSelectListID), LVS_EX_COLUMNSNAPPOINTS | LVS_EX_CHECKBOXES | LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES);
+	//插入列
+	temp.pszText = (LPTSTR)_T("设备ID");
+	temp.cxDefault = 0;
+	ListView_InsertColumn(GetDlgItem(MyWnds::DialogProc_hwnd, devIDSelectListID), 0, &temp);
+	Device tempDev;//存放将要读取的设备数据
+	tempHANDLE = CreateFile(_T("Device.dat"), GENERIC_READ, NULL, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);//打开文件
+	for (int x = 0; true; ++x) {
+		ReadFile(tempHANDLE, &tempDev, sizeof(Device), &tempDWORD, NULL);//读取文件
+		if (!tempDWORD)break;
+		tempINSERT.iItem = x;
+		tempINSERT.iSubItem = 0;
+		tempINSERT.pszText = tempDev.mID;
+		ListView_InsertItem(GetDlgItem(MyWnds::DialogProc_hwnd, devIDSelectListID), &tempINSERT);
+	}
+	CloseHandle(tempHANDLE);//关闭文件
+
+	//确认
+	CreateWindowEx(
+		0, WC_BUTTON, _T("确认"), WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP,
+		int(0.1 * DialogWidth), int(0.67 * DialogHeight), int(0.2 * DialogWidth), int(0.1 * DialogHeight),
+		MyWnds::DialogProc_hwnd, HMENU(confirmButtonID), MyWnds::hInstance, NULL
+	);
+	SendMessage(GetDlgItem(MyWnds::DialogProc_hwnd, confirmButtonID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
+	//取消
+	CreateWindowEx(
+		0, WC_BUTTON, _T("取消"), WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP,
+		int(0.1 * DialogWidth), int(0.8 * DialogHeight), int(0.2 * DialogWidth), int(0.1 * DialogHeight),
+		MyWnds::DialogProc_hwnd, HMENU(cancelButtonID), MyWnds::hInstance, NULL
+	);
+	SendMessage(GetDlgItem(MyWnds::DialogProc_hwnd, cancelButtonID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
+
+}
+
+
 
 WPARAM MyWnds::Dialog() {
+	int x, y, cx, cy;
+	if (dialogFlag == dialogTradeSelect) {
+		x = int(0.3 * MyWnds::defScreenWidth);
+		y = int(0.2 * MyWnds::defScreenHeight);
+		cx = int(0.7 * MyWnds::defMainWndWidth);
+		cy = int(0.8 * MyWnds::defMainWndHeight);
+	}
+	else {
+		x = int(0.45 * MyWnds::defScreenWidth);
+		y = int(0.2 * MyWnds::defScreenHeight);
+		cx = int(0.7 * MyWnds::defMainWndHeight);
+		cy = int(0.8 * MyWnds::defMainWndHeight);
+	}
 	//创建对话框
 	HWND dialogHwnd = CreateWindowEx(
-		0, _T("dialogClassName"), _T("对话框"), WS_TILEDWINDOW | WS_VISIBLE ,
-		int(0.45 * MyWnds::defScreenWidth), int(0.2 * MyWnds::defScreenHeight), int(0.7 * MyWnds::defMainWndHeight), int(0.8 * MyWnds::defMainWndHeight),
+		WS_EX_CONTROLPARENT, _T("dialogClassName"), _T("对话框"), WS_TILEDWINDOW | WS_VISIBLE ,
+		x, y, cx, cy,
 		MyWnds::MainWndProc_hwnd, NULL, MyWnds::hInstance, NULL
 	);
 	if (!dialogHwnd) {
@@ -1042,8 +1732,8 @@ WPARAM MyWnds::Dialog() {
 		}
 		//创建窗口---对话框
 		dialogHwnd = CreateWindowEx(
-			0, _T("dialogClassName"), _T("对话框"), WS_TILEDWINDOW | WS_VISIBLE,
-			int(0.45 * MyWnds::defScreenWidth), int(0.2 * MyWnds::defScreenHeight), int(0.7 * MyWnds::defMainWndHeight), int(0.8 * MyWnds::defMainWndHeight),
+			WS_EX_CONTROLPARENT, _T("dialogClassName"), _T("对话框"), WS_TILEDWINDOW | WS_VISIBLE,
+			x, y, cx, cy,
 			MyWnds::MainWndProc_hwnd, NULL, MyWnds::hInstance, NULL
 		);
 		if (!dialogHwnd) {
@@ -1064,8 +1754,11 @@ WPARAM MyWnds::Dialog() {
 		}
 		else
 		{
-			TranslateMessage(&Msg);
-			DispatchMessage(&Msg);
+			if (!IsDialogMessage(dialogHwnd, &Msg)) //该函数处理键盘消息
+			{
+				TranslateMessage(&Msg);
+				DispatchMessage(&Msg);
+			}
 		}
 	}
 	//强制主窗口显示在前台
@@ -1078,7 +1771,7 @@ WPARAM MyWnds::Dialog() {
 //创建登录按钮
 void MyWnds::createLoginButton(){
 	CreateWindowEx(
-		0, WC_BUTTON, _T("已有账号？点此登录"), WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+		0, WC_BUTTON, _T("已有账号？点此登录"), WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP,
 		int(0.27 * MyWnds::defMainWndWidth), int(0.55 * MyWnds::defMainWndHeight), int(0.15 * MyWnds::defMainWndWidth), int(0.15 * MyWnds::defMainWndHeight),
 		MyWnds::MainWndProc_hwnd, HMENU(loginButtonID), MyWnds::hInstance, NULL
 	);
@@ -1087,7 +1780,7 @@ void MyWnds::createLoginButton(){
 //创建登录确认按钮
 void MyWnds::createLoginConfirmButton() {
 	CreateWindowEx(
-		0, WC_BUTTON, _T("登录"), WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+		0, WC_BUTTON, _T("登录"), WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP,
 		int(0.27 * MyWnds::MyWnds::defMainWndWidth), int(0.55 * MyWnds::defMainWndHeight), int(0.15 * MyWnds::defMainWndWidth), int(0.15 * MyWnds::defMainWndHeight),
 		MyWnds::MainWndProc_hwnd, HMENU(loginConfirmButtonID), MyWnds::hInstance, NULL
 	);
@@ -1096,7 +1789,7 @@ void MyWnds::createLoginConfirmButton() {
 //创建注册按钮
 void MyWnds::createRegisterButton(){
 	CreateWindowEx(
-		0, WC_BUTTON, _T("没有账号？点此注册"), WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+		0, WC_BUTTON, _T("没有账号？点此注册"), WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP,
 		int(0.52 * MyWnds::defMainWndWidth), int(0.55 * MyWnds::defMainWndHeight), int(0.15 * MyWnds::defMainWndWidth), int(0.15 * MyWnds::defMainWndHeight),
 		MyWnds::MainWndProc_hwnd, HMENU(registerButtonID), MyWnds::hInstance, NULL
 	);
@@ -1105,7 +1798,7 @@ void MyWnds::createRegisterButton(){
 //创建注册确认按钮
 void MyWnds::createRegisterConfirmButton(){
 	CreateWindowEx(
-		0, WC_BUTTON, _T("注册"), WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+		0, WC_BUTTON, _T("注册"), WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP,
 		int(0.52 * MyWnds::defMainWndWidth), int(0.55 * MyWnds::defMainWndHeight), int(0.15 * MyWnds::defMainWndWidth), int(0.15 * MyWnds::defMainWndHeight),
 		MyWnds::MainWndProc_hwnd, HMENU(registerConfirmButtonID), MyWnds::hInstance, NULL
 	);
@@ -1114,7 +1807,7 @@ void MyWnds::createRegisterConfirmButton(){
 //创建主页按钮
 void MyWnds::createHomePageButton(){
 	CreateWindowEx(
-		0, WC_BUTTON, _T("主页"), WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+		0, WC_BUTTON, _T("主页"), WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP,
 		int(homePageButtonCoord_X * MyWnds::MyWnds::defMainWndWidth), int(homePageButtonCoord_Y * MyWnds::defMainWndHeight), int(homePageButtonWidth * MyWnds::defMainWndWidth), int(homePageButtonHeight * MyWnds::defMainWndHeight),
 		MyWnds::MainWndProc_hwnd, HMENU(homePageButtonID), MyWnds::hInstance, NULL
 	);
@@ -1123,7 +1816,7 @@ void MyWnds::createHomePageButton(){
 //创建用户信息按钮
 void MyWnds::createActInfoButton(){
 	CreateWindowEx(
-		0, WC_BUTTON, _T("用户信息"), WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+		0, WC_BUTTON, _T("用户信息"), WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP,
 		int(homePageButtonCoord_X * MyWnds::MyWnds::defMainWndWidth), int((homePageButtonCoord_Y + 0.15) * MyWnds::defMainWndHeight), int(homePageButtonWidth * MyWnds::defMainWndWidth), int(homePageButtonHeight * MyWnds::defMainWndHeight),
 		MyWnds::MainWndProc_hwnd, HMENU(actInfoButtonID), MyWnds::hInstance, NULL
 	);
@@ -1132,7 +1825,7 @@ void MyWnds::createActInfoButton(){
 //创建设备信息按钮
 void MyWnds::createDevInfoButton(){
 	CreateWindowEx(
-		0, WC_BUTTON, _T("设备信息"), WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+		0, WC_BUTTON, _T("设备信息"), WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP,
 		int(homePageButtonCoord_X * MyWnds::MyWnds::defMainWndWidth), int((homePageButtonCoord_Y + 0.3) * MyWnds::defMainWndHeight), int(homePageButtonWidth * MyWnds::defMainWndWidth), int(homePageButtonHeight * MyWnds::defMainWndHeight),
 		MyWnds::MainWndProc_hwnd, HMENU(devInfoButtonID), MyWnds::hInstance, NULL
 	);
@@ -1145,7 +1838,7 @@ void MyWnds::createTradeInfoButton(){
 		_stprintf_s(tempTCHAR, _T("交易记录"));//有管理权限的用户显示交易记录
 	}
 	CreateWindowEx(
-		0, WC_BUTTON, tempTCHAR , WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+		0, WC_BUTTON, tempTCHAR , WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP,
 		int(homePageButtonCoord_X * MyWnds::MyWnds::defMainWndWidth), int((homePageButtonCoord_Y + 0.45) * MyWnds::defMainWndHeight), int(homePageButtonWidth * MyWnds::defMainWndWidth), int(homePageButtonHeight * MyWnds::defMainWndHeight),
 		MyWnds::MainWndProc_hwnd, HMENU(tradeInfoButtonID), MyWnds::hInstance, NULL
 	);
@@ -1154,7 +1847,7 @@ void MyWnds::createTradeInfoButton(){
 //创建退出系统按钮
 void MyWnds::createExitButton(){
 	CreateWindowEx(
-		0, WC_BUTTON, _T("退出系统"), WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+		0, WC_BUTTON, _T("退出系统"), WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP,
 		int(homePageButtonCoord_X * MyWnds::MyWnds::defMainWndWidth), int((homePageButtonCoord_Y + 0.6) * MyWnds::defMainWndHeight), int(homePageButtonWidth * MyWnds::defMainWndWidth), int(homePageButtonHeight * MyWnds::defMainWndHeight),
 		MyWnds::MainWndProc_hwnd, HMENU(exitButtonID), MyWnds::hInstance, NULL
 	);
@@ -1204,7 +1897,7 @@ void MyWnds::createActNameEdit_Static(){
 	);
 	SendMessage(GetDlgItem(MyWnds::MainWndProc_hwnd, actNameStaticID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
 	CreateWindowEx(
-		WS_EX_CLIENTEDGE, WC_EDIT, _T(""), WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL,
+		WS_EX_CLIENTEDGE, WC_EDIT, _T(""), WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL | WS_TABSTOP,
 		int(0.33 * MyWnds::defMainWndWidth), int(0.2 * MyWnds::defMainWndHeight), int(0.31 * MyWnds::defMainWndWidth), int(0.05 * MyWnds::defMainWndHeight),
 		MyWnds::MainWndProc_hwnd, HMENU(actNameEditID), MyWnds::hInstance, NULL
 	);
@@ -1331,6 +2024,9 @@ BOOL CALLBACK MyWnds::EnumChildProc_AdaptiveWnd(HWND hwndChild, LPARAM lParam) {
 	case tradeInfoWndID://交易记录
 		MoveWindow(hwndChild, int((homePageButtonWidth + homePageButtonCoord_X * 2) * MyWnds::defMainWndWidth), int(homePageButtonCoord_Y / 2.0 * MyWnds::defMainWndHeight), MyWnds::homePageWidth, MyWnds::homePageHeight, TRUE);
 		break;
+	case tradeSelectSysLinkID:
+		MoveWindow(hwndChild, int(0.1 * MyWnds::homePageWidth), int(0.05 * MyWnds::homePageHeight), int(0.1 * MyWnds::homePageWidth), int(0.05 * MyWnds::homePageHeight), TRUE);
+		break;
 
 	case dataInfoListID:
 		MoveWindow(hwndChild, int(0.05 * MyWnds::homePageWidth), int(0.1 * MyWnds::homePageHeight), int(0.9 * MyWnds::homePageWidth), int(0.85 * MyWnds::homePageHeight), TRUE);
@@ -1355,5 +2051,33 @@ void MyWnds::DestroyControl(HWND hWnd,const std::initializer_list<int>& controlI
 void MyWnds::SendMessageToControl(HWND hWnd, const std::initializer_list<int>& controlID, UINT Msg, WPARAM wParam, LPARAM lParam) {
 	for (auto cID : controlID) {
 		SendMessage(GetDlgItem(hWnd, cID), Msg, wParam, lParam);
+	}
+}
+
+
+HWND ListCompareHandle = NULL;
+bool ListCompareFlag = 1;
+//用于列表中项的比较
+int CALLBACK ListCompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort) {
+	TCHAR tempTCHAR[51], _tempTCHAR[51];
+	ListView_GetItemText(GetDlgItem(ListCompareHandle, dataInfoListID), lParam1, LPNMLISTVIEW(lParamSort)->iSubItem, tempTCHAR, 51);
+	ListView_GetItemText(GetDlgItem(ListCompareHandle, dataInfoListID), lParam2, LPNMLISTVIEW(lParamSort)->iSubItem, _tempTCHAR, 51);
+	LVCOLUMN temp;
+	ListView_GetColumn(GetDlgItem(ListCompareHandle, dataInfoListID), LPNMLISTVIEW(lParamSort)->iSubItem, &temp);
+	if (temp.cxDefault) {
+		//判定数据是字符型还是数值型
+		if (ListCompareFlag)
+		{
+			return _wtoi(tempTCHAR) - _wtoi(_tempTCHAR);//升序
+		}
+		else {
+			return _wtoi(_tempTCHAR) - _wtoi(tempTCHAR);//降序
+		}
+	}
+	if (ListCompareFlag) {
+		return _tcscmp(tempTCHAR, _tempTCHAR);//升序
+	}
+	else {
+		return _tcscmp(_tempTCHAR, tempTCHAR);//降序
 	}
 }

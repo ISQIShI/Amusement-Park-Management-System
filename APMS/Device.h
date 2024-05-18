@@ -38,3 +38,7 @@ public:
 	static void DevInfo();
 
 };
+
+extern bool ListCompareFlag;
+extern HWND ListCompareHandle;
+extern int CALLBACK ListCompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort);

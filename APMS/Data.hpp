@@ -117,15 +117,17 @@ bool Data<T>::DataDelete(LPCTSTR fillname, LPCTSTR id) {
 			break;
 		}
 	} while (tempDWORD);
-	//文件指针前移一整个T数据
-	tempL_I.QuadPart = -(long long)(sizeof(T));
-	SetFilePointerEx(tempHANDLE, tempL_I, NULL, FILE_CURRENT);
-	//用最后一个数据覆盖要删除的数据
-	WriteFile(tempHANDLE, &endData, sizeof(T), &written, NULL);
-	//移动文件指针到最后一个数据之前
-	SetFilePointerEx(tempHANDLE, tempL_I, NULL, FILE_END);
-	//截断文件
-	SetEndOfFile(tempHANDLE);
+	if (tempflag) {
+		//文件指针前移一整个T数据
+		tempL_I.QuadPart = -(long long)(sizeof(T));
+		SetFilePointerEx(tempHANDLE, tempL_I, NULL, FILE_CURRENT);
+		//用最后一个数据覆盖要删除的数据
+		WriteFile(tempHANDLE, &endData, sizeof(T), &written, NULL);
+		//移动文件指针到最后一个数据之前
+		SetFilePointerEx(tempHANDLE, tempL_I, NULL, FILE_END);
+		//截断文件
+		SetEndOfFile(tempHANDLE);
+	}
 	CloseHandle(tempHANDLE);
 	--T::mCount;
 	return 1;

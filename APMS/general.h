@@ -65,6 +65,8 @@ typedef unsigned char BYTE;
 #define devPriceEditID 209//价格
 #define devChargeEditID 210//收费
 #define devIntroEditID 211//设备介绍
+#define tradeIDEditID 212//交易ID
+#define tradeMoneyEditID 213//交易金额
 
 //静态文本
 #define userNameStaticID 301//用户名
@@ -76,6 +78,10 @@ typedef unsigned char BYTE;
 #define devIDStaticID 307//设备ID
 #define devPriceStaticID 308//价格
 #define devChargeStaticID 309//收费
+#define tradeIDStaticID 310//交易ID
+#define tradeMoneyStaticID 311//交易金额
+#define tradeTimeAStaticID 312//交易时间A
+#define tradeTimeBStaticID 313//交易时间B
 
 //SysLink
 #define editActNameSysLinkID 401//编辑用户昵称
@@ -88,10 +94,23 @@ typedef unsigned char BYTE;
 #define dataInfoSysLinkID 408//更改数据信息(增加/修改/删除)
 #define editDevIntroSysLinkID 409//编辑设备介绍
 #define devSaveSysLinkID 410//保存(设备信息)
-
+#define tradeSelectSysLinkID 411//筛选交易记录
 
 //ListView
 #define dataInfoListID 501//数据信息列表
+#define selectListID 502
+#define userNameSelectListID 503
+#define devIDSelectListID 504
+
+//组合框
+#define userNameComboBoxID 601//用户名
+#define devIDComboBoxID 602//设备ID
+
+//时间
+#define tradeDateATimeID 701//交易日期A
+#define tradeMomentATimeID 702//交易时刻A
+#define tradeDateBTimeID 703//交易日期B
+#define tradeMomentBTimeID 704//交易时刻B
 
 //UI界面
 #define LoginUI 1
@@ -108,6 +127,7 @@ typedef unsigned char BYTE;
 #define dialogDevModify 4
 #define dialogTradeAdd 5
 #define dialogTradeModify 6
+#define dialogTradeSelect 7
 
 //字体
 #define defSmallFont 1

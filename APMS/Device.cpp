@@ -24,6 +24,16 @@ LRESULT CALLBACK Device::DevInfoProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
 	Device::DevInfoProc_lParam = lParam;
 	switch (uMsg)
 	{
+	case WM_CTLCOLORSTATIC:
+	{
+		//更改只读状态下的编辑框的背景色为白色
+		MyWnds::hDC = (HDC)Device::DevInfoProc_wParam;
+		SetTextColor(MyWnds::hDC, RGB(0, 0, 0));//文字前景色
+		//SetBkColor(MyWnds::hDC, RGB(144, 244, 124));//文字背景色
+		SetBkMode(MyWnds::hDC, TRANSPARENT);//背景透明
+		MyWnds::hDC = NULL;
+		return (INT_PTR)CreateSolidBrush(RGB(255, 255, 255));
+	}
 	case WM_NOTIFY:
 		Device::DevInfoProc_WM_NOTIFY();
 		break;
@@ -75,7 +85,7 @@ void Device::DevInfoProc_WM_NOTIFY() {
 			ShowWindow(GetDlgItem(Device::DevInfoProc_hwnd, editDevIntroSysLinkID), SW_HIDE);
 			//保存
 			CreateWindowEx(
-				0, _T("SysLink"), _T("<A HREF=\"保存\">保存</A>"), WS_CHILD | WS_VISIBLE | LWS_TRANSPARENT,
+				0, _T("SysLink"), _T("<A HREF=\"保存\">保存</A>"), WS_CHILD | WS_VISIBLE | LWS_TRANSPARENT | WS_TABSTOP,
 				int(0.7 * MyWnds::homePageWidth), int(0.4 * MyWnds::homePageHeight), int(0.1 * MyWnds::homePageWidth), int(0.05 * MyWnds::homePageHeight),
 				Device::DevInfoProc_hwnd, HMENU(devSaveSysLinkID), MyWnds::hInstance, NULL
 			);
@@ -133,7 +143,8 @@ void Device::DevInfoProc_WM_NOTIFY() {
 				if (MessageBox(Device::DevInfoProc_hwnd, _T("确定要删除这些设备吗？"), _T("提示"), MB_OKCANCEL | MB_ICONINFORMATION) == IDOK) {
 					for (int y = ListView_GetItemCount(GetDlgItem(Device::DevInfoProc_hwnd, dataInfoListID)) - 1; y >= 0; --y) {
 						if (ListView_GetCheckState(GetDlgItem(Device::DevInfoProc_hwnd, dataInfoListID), y)) {
-							ListView_GetItemText(GetDlgItem(Device::DevInfoProc_hwnd, dataInfoListID), y, 2, tempTCHAR, devID * 2);
+							//获取设备ID
+							ListView_GetItemText(GetDlgItem(Device::DevInfoProc_hwnd, dataInfoListID), y, 2, tempTCHAR, devID );
 							Data<Device>::DataDelete(_T("Device.dat"), tempTCHAR);
 						}
 					}
@@ -219,14 +230,14 @@ void Device::DevInfoProc_WM_NOTIFY() {
 			MyWnds::DestroyControl(Device::DevInfoProc_hwnd, { dataInfoListID,dataInfoSysLinkID });
 			//返回
 			CreateWindowEx(
-				0, _T("SysLink"), _T("<A HREF=\"返回\">返回</A>"), WS_CHILD | WS_VISIBLE | LWS_TRANSPARENT,
+				0, _T("SysLink"), _T("<A HREF=\"返回\">返回</A>"), WS_CHILD | WS_VISIBLE | LWS_TRANSPARENT | WS_TABSTOP,
 				int(0.1 * MyWnds::homePageWidth), int(0.05 * MyWnds::homePageHeight), int(0.1 * MyWnds::homePageWidth), int(0.05 * MyWnds::homePageHeight),
 				Device::DevInfoProc_hwnd, HMENU(returnSysLinkID), MyWnds::hInstance, NULL
 			);
 			SendMessage(GetDlgItem(Device::DevInfoProc_hwnd, returnSysLinkID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
 			//编辑框--介绍
 			CreateWindowEx(
-				WS_EX_CLIENTEDGE, WC_EDIT, Device::currentDev.mIntro, WS_CHILD | WS_VISIBLE | WS_VSCROLL | ES_MULTILINE | ES_WANTRETURN |ES_READONLY,
+				WS_EX_CLIENTEDGE, WC_EDIT, Device::currentDev.mIntro, WS_CHILD | WS_VISIBLE | WS_VSCROLL | ES_MULTILINE | ES_WANTRETURN |ES_READONLY | WS_TABSTOP,
 				int(0.1 * MyWnds::homePageWidth), int(0.45 * MyWnds::homePageHeight), int(0.65 * MyWnds::homePageWidth), int(0.5 * MyWnds::homePageHeight),
 				Device::DevInfoProc_hwnd, HMENU(devIntroEditID), MyWnds::hInstance, NULL
 			);
@@ -236,7 +247,7 @@ void Device::DevInfoProc_WM_NOTIFY() {
 			if (MyWnds::currentAct.mPer.mAdmin) {
 				//编辑介绍内容
 				CreateWindowEx(
-					0, _T("SysLink"), _T("<A HREF=\"编辑\">编辑</A>"), WS_CHILD | WS_VISIBLE | LWS_TRANSPARENT,
+					0, _T("SysLink"), _T("<A HREF=\"编辑\">编辑</A>"), WS_CHILD | WS_VISIBLE | LWS_TRANSPARENT | WS_TABSTOP,
 					int(0.7 * MyWnds::homePageWidth), int(0.4 * MyWnds::homePageHeight), int(0.1 * MyWnds::homePageWidth), int(0.05 * MyWnds::homePageHeight),
 					Device::DevInfoProc_hwnd, HMENU(editDevIntroSysLinkID), MyWnds::hInstance, NULL
 				);
@@ -245,9 +256,8 @@ void Device::DevInfoProc_WM_NOTIFY() {
 			//重绘整个窗口
 			InvalidateRect(Device::DevInfoProc_hwnd, NULL, TRUE);
 			SendMessage(Device::DevInfoProc_hwnd, WM_PAINT, NULL, NULL);
-
+			break;
 		}
-		break;
 		}
 		break;
 	}
@@ -258,12 +268,21 @@ void Device::DevInfoProc_WM_NOTIFY() {
 		case dataInfoListID:
 		{
 
+			break;
 		}
-		break;
 		}
+
 		break;
 	}
 
+	case LVN_COLUMNCLICK:
+	{
+		ListCompareHandle = Device::DevInfoProc_hwnd;
+		ListView_SortItemsEx(GetDlgItem(Device::DevInfoProc_hwnd, dataInfoListID), ListCompareFunc, Device::DevInfoProc_lParam);
+		if (ListCompareFlag)ListCompareFlag = 0;
+		else ListCompareFlag = 1;
+		break;
+	}
 
 
 	}
@@ -299,13 +318,13 @@ void Device::DevInfoProc_WM_CREATE() {
 	//列表坐标初始化
 	MyWnds::x_Listview = -1;
 	MyWnds::y_Listview = 0;
-	//更改设备信息
+	//更改设备信息(需要权限)
 	if (MyWnds::currentAct.mPer.mAdmin) {
 		CreateWindowEx(
 			0, _T("SysLink"), _T("<A HREF=\"添加\">添加</A>")\
 			_T(" <A HREF=\"修改\">修改</A>")\
 			_T(" <A HREF=\"删除\">删除</A>"),
-			WS_CHILD | WS_VISIBLE | LWS_TRANSPARENT,
+			WS_CHILD | WS_VISIBLE | LWS_TRANSPARENT | WS_TABSTOP,
 			int(0.8 * MyWnds::homePageWidth), int(0.05 * MyWnds::homePageHeight), int(0.2 * MyWnds::homePageWidth), int(0.05 * MyWnds::homePageHeight),
 			Device::DevInfoProc_hwnd, HMENU(dataInfoSysLinkID), MyWnds::hInstance, NULL
 		);
@@ -321,41 +340,47 @@ void Device::DevInfoProc_WM_CREATE() {
 	ListView_SetExtendedListViewStyle(GetDlgItem(Device::DevInfoProc_hwnd, dataInfoListID), LVS_EX_COLUMNSNAPPOINTS | LVS_EX_CHECKBOXES | LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES);
 	//插入列
 	LVCOLUMN temp = { 0 };
-	temp.mask = LVCF_TEXT | LVCF_FMT | LVCF_WIDTH | LVCF_MINWIDTH | LVCF_SUBITEM;
+	temp.mask = LVCF_TEXT | LVCF_FMT | LVCF_WIDTH | LVCF_MINWIDTH | LVCF_SUBITEM | LVCF_DEFAULTWIDTH;
 	temp.fmt = LVCFMT_CENTER;
 	temp.cx = int(0.07 * MyWnds::homePageWidth);
 	temp.pszText = (LPTSTR)_T("序号");
 	temp.iSubItem = 0;
+	temp.cxDefault = 1;
 	temp.cxMin = int(0.07 * MyWnds::homePageWidth);
 	ListView_InsertColumn(GetDlgItem(Device::DevInfoProc_hwnd, dataInfoListID), 0, &temp);
 
 	temp.cx = int(0.2 * MyWnds::homePageWidth);
 	temp.pszText = (LPTSTR)_T("设备名称");
 	temp.iSubItem = 1;
+	temp.cxDefault = 0;
 	temp.cxMin = int(0.2 * MyWnds::homePageWidth);
 	ListView_InsertColumn(GetDlgItem(Device::DevInfoProc_hwnd, dataInfoListID), 1, &temp);
 
 	temp.cx = int(0.2 * MyWnds::homePageWidth);
 	temp.pszText = (LPTSTR)_T("设备ID");
 	temp.iSubItem = 2;
+	temp.cxDefault = 0;
 	temp.cxMin = int(0.2 * MyWnds::homePageWidth);
 	ListView_InsertColumn(GetDlgItem(Device::DevInfoProc_hwnd, dataInfoListID), 2, &temp);
 
 	temp.cx = int(0.12 * MyWnds::homePageWidth);
 	temp.pszText = (LPTSTR)_T("价格");
 	temp.iSubItem = 3;
+	temp.cxDefault = 1;
 	temp.cxMin = int(0.12 * MyWnds::homePageWidth);
 	ListView_InsertColumn(GetDlgItem(Device::DevInfoProc_hwnd, dataInfoListID), 3, &temp);
 
 	temp.cx = int(0.11 * MyWnds::homePageWidth);
 	temp.pszText = (LPTSTR)_T("收费");
 	temp.iSubItem = 4;
+	temp.cxDefault = 1;
 	temp.cxMin = int(0.11 * MyWnds::homePageWidth);
 	ListView_InsertColumn(GetDlgItem(Device::DevInfoProc_hwnd, dataInfoListID), 4, &temp);
 
 	temp.cx = int(0.2 * MyWnds::homePageWidth);
 	temp.pszText = (LPTSTR)_T("录入时间");
 	temp.iSubItem = 5;
+	temp.cxDefault = 0;
 	temp.cxMin = int(0.2 * MyWnds::homePageWidth);
 	ListView_InsertColumn(GetDlgItem(Device::DevInfoProc_hwnd, dataInfoListID), 5, &temp);
 	//插入行
@@ -412,7 +437,7 @@ void Device::DevInfoProc_WM_CREATE() {
 void Device::DevInfo() {
 	//创建窗口---设备信息
 	HWND devInfoHwnd = CreateWindowEx(
-		0, _T("devInfoClassName"), _T("设备信息"), WS_TILED | WS_CHILD | WS_VISIBLE,
+		WS_EX_CONTROLPARENT, _T("devInfoClassName"), _T("设备信息"), WS_TILED | WS_CHILD | WS_VISIBLE,
 		int((homePageButtonWidth + homePageButtonCoord_X * 2) * MyWnds::defMainWndWidth), int(homePageButtonCoord_Y / 2.0 * MyWnds::defMainWndHeight), MyWnds::homePageWidth, MyWnds::homePageHeight,
 		MyWnds::MainWndProc_hwnd, HMENU(devInfoWndID), MyWnds::hInstance, NULL
 	);
@@ -433,7 +458,7 @@ void Device::DevInfo() {
 		}
 		//创建窗口---设备信息
 		devInfoHwnd = CreateWindowEx(
-			0, _T("devInfoClassName"), _T("设备信息"), WS_TILED | WS_CHILD | WS_VISIBLE,
+			WS_EX_CONTROLPARENT, _T("devInfoClassName"), _T("设备信息"), WS_TILED | WS_CHILD | WS_VISIBLE,
 			int((homePageButtonWidth + homePageButtonCoord_X * 2) * MyWnds::defMainWndWidth), int(homePageButtonCoord_Y / 2.0 * MyWnds::defMainWndHeight), MyWnds::homePageWidth, MyWnds::homePageHeight,
 			MyWnds::MainWndProc_hwnd, HMENU(devInfoWndID), MyWnds::hInstance, NULL
 		);

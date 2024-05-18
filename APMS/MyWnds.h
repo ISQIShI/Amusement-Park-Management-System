@@ -106,7 +106,9 @@ public:
 	static void DialogActModify();
 	static void DialogDevAdd();
 	static void DialogDevModify();
-
+	static void DialogTradeAdd();
+	static void DialogTradeModify();
+	static void DialogTradeSelect();
 	//创建子控件
 	static void createLoginButton();
 	static void createLoginConfirmButton();
@@ -130,3 +132,7 @@ public:
 	static void SendMessageToControl(HWND hWnd, const std::initializer_list<int>& controlID, UINT Msg = WM_SETFONT, WPARAM wParam = (WPARAM)MyWnds::currentHFONT, LPARAM lParam = TRUE);
 
 };
+
+extern bool ListCompareFlag;
+extern HWND ListCompareHandle;
+int CALLBACK ListCompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort);

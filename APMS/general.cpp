@@ -16,3 +16,4 @@ void OpenMyGitHubProjectPage() {
 	//调用函数打开网址
 	ShellExecuteEx(&apms);
 }
+

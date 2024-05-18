@@ -73,7 +73,7 @@ void Account::ActInfoProc_WM_NOTIFY() {
 			MyWnds::DestroyControl(Account::ActInfoProc_hwnd, { editActNameSysLinkID,editPasswdSysLinkID,creditSysLinkID,logoutSysLinkID,browseActSysLinkID });
 			//返回
 			CreateWindowEx(
-				0, _T("SysLink"), _T("<A HREF=\"返回\">返回</A>"), WS_CHILD | WS_VISIBLE | LWS_TRANSPARENT,
+				0, _T("SysLink"), _T("<A HREF=\"返回\">返回</A>"), WS_CHILD | WS_VISIBLE | LWS_TRANSPARENT | WS_TABSTOP,
 				int(0.1 * MyWnds::homePageWidth), int(0.05 * MyWnds::homePageHeight), int(0.1 * MyWnds::homePageWidth), int(0.05 * MyWnds::homePageHeight),
 				Account::ActInfoProc_hwnd, HMENU(returnSysLinkID), MyWnds::hInstance, NULL
 			);
@@ -83,7 +83,7 @@ void Account::ActInfoProc_WM_NOTIFY() {
 				0, _T("SysLink"), _T("<A HREF=\"添加\">添加</A>")\
 				_T(" <A HREF=\"修改\">修改</A>")\
 				_T(" <A HREF=\"删除\">删除</A>"),
-				WS_CHILD | WS_VISIBLE | LWS_TRANSPARENT,
+				WS_CHILD | WS_VISIBLE | LWS_TRANSPARENT | WS_TABSTOP,
 				int(0.8 * MyWnds::homePageWidth), int(0.05 * MyWnds::homePageHeight), int(0.2 * MyWnds::homePageWidth), int(0.05 * MyWnds::homePageHeight),
 				Account::ActInfoProc_hwnd, HMENU(dataInfoSysLinkID), MyWnds::hInstance, NULL
 			);
@@ -98,29 +98,33 @@ void Account::ActInfoProc_WM_NOTIFY() {
 			ListView_SetExtendedListViewStyle(GetDlgItem(Account::ActInfoProc_hwnd, dataInfoListID), LVS_EX_COLUMNSNAPPOINTS | LVS_EX_CHECKBOXES | LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES);
 			//插入列
 			LVCOLUMN temp = { 0 };
-			temp.mask = LVCF_TEXT | LVCF_FMT | LVCF_WIDTH | LVCF_MINWIDTH | LVCF_SUBITEM;
+			temp.mask = LVCF_TEXT | LVCF_FMT | LVCF_WIDTH | LVCF_MINWIDTH | LVCF_SUBITEM | LVCF_DEFAULTWIDTH;
 			temp.fmt = LVCFMT_CENTER;
 			temp.cx = int(0.07 * MyWnds::homePageWidth);
 			temp.pszText = (LPTSTR)_T("序号");
 			temp.iSubItem = 0;
+			temp.cxDefault = 1;
 			temp.cxMin = int(0.07 * MyWnds::homePageWidth);
 			ListView_InsertColumn(GetDlgItem(Account::ActInfoProc_hwnd, dataInfoListID), 0, &temp);
 
 			temp.cx = int(0.16 * MyWnds::homePageWidth);
 			temp.pszText = (LPTSTR)_T("用户昵称");
 			temp.iSubItem = 1;
+			temp.cxDefault = 0;
 			temp.cxMin = int(0.16 * MyWnds::homePageWidth);
 			ListView_InsertColumn(GetDlgItem(Account::ActInfoProc_hwnd, dataInfoListID), 1, &temp);
 
 			temp.cx = int(0.15 * MyWnds::homePageWidth);
 			temp.pszText = (LPTSTR)_T("用户名");
 			temp.iSubItem = 2;
+			temp.cxDefault = 0;
 			temp.cxMin = int(0.15 * MyWnds::homePageWidth);
 			ListView_InsertColumn(GetDlgItem(Account::ActInfoProc_hwnd, dataInfoListID), 2, &temp);
 
 			temp.cx = int(0.15 * MyWnds::homePageWidth);
 			temp.pszText = (LPTSTR)_T("密码");
 			temp.iSubItem = 3;
+			temp.cxDefault = 0;
 			temp.cxMin = int(0.15 * MyWnds::homePageWidth);
 			ListView_InsertColumn(GetDlgItem(Account::ActInfoProc_hwnd, dataInfoListID), 3, &temp);
 
@@ -128,18 +132,21 @@ void Account::ActInfoProc_WM_NOTIFY() {
 			temp.cx = int(0.06 * MyWnds::homePageWidth);
 			temp.pszText = (LPTSTR)_T("权限");
 			temp.iSubItem = 4;
+			temp.cxDefault = 1;
 			temp.cxMin = int(0.06 * MyWnds::homePageWidth);
 			ListView_InsertColumn(GetDlgItem(Account::ActInfoProc_hwnd, dataInfoListID), 4, &temp);
 
 			temp.cx = int(0.1 * MyWnds::homePageWidth);
 			temp.pszText = (LPTSTR)_T("余额");
 			temp.iSubItem = 5;
+			temp.cxDefault = 1;
 			temp.cxMin = int(0.1 * MyWnds::homePageWidth);
 			ListView_InsertColumn(GetDlgItem(Account::ActInfoProc_hwnd, dataInfoListID), 5, &temp);
 
 			temp.cx = int(0.2 * MyWnds::homePageWidth);
 			temp.pszText = (LPTSTR)_T("注册时间");
 			temp.iSubItem = 6;
+			temp.cxDefault = 0;
 			temp.cxMin = int(0.2 * MyWnds::homePageWidth);
 			ListView_InsertColumn(GetDlgItem(Account::ActInfoProc_hwnd, dataInfoListID), 6, &temp);
 			//插入行
@@ -207,11 +214,11 @@ void Account::ActInfoProc_WM_NOTIFY() {
 			else if (PNMLINK(Account::ActInfoProc_lParam)->item.iLink == 1)//修改
 			{
 				TCHAR tempTCHAR[21] = {};//存储要修改的用户的权限信息
-				ListView_GetItemText(GetDlgItem(Account::ActInfoProc_hwnd, dataInfoListID), MyWnds::y_Listview, 4, tempTCHAR, 8);
+				ListView_GetItemText(GetDlgItem(Account::ActInfoProc_hwnd, dataInfoListID), MyWnds::y_Listview, 4, tempTCHAR, 4);
 				if ((MyWnds::x_Listview == -1 && MyWnds::y_Listview == 0) || MyWnds::y_Listview >= ListView_GetItemCount(GetDlgItem(Account::ActInfoProc_hwnd, dataInfoListID))) {
 					MessageBox(Account::ActInfoProc_hwnd, _T("请选择要修改的用户"), _T("提示"), MB_ICONINFORMATION);
 				}
-				else if (MyWnds::currentAct.mPer.mAdmin <= _wtoi64(tempTCHAR)) {
+				else if (MyWnds::currentAct.mPer.mAdmin <= _wtoi(tempTCHAR)) {
 					MessageBox(Account::ActInfoProc_hwnd, _T("您的权限不足，无法修改所选用户信息"), _T("权限不足"), MB_ICONERROR);
 				}
 				else {
@@ -225,9 +232,12 @@ void Account::ActInfoProc_WM_NOTIFY() {
 				if (MessageBox(Account::ActInfoProc_hwnd, _T("确定要删除这些用户吗？"), _T("提示"), MB_OKCANCEL | MB_ICONINFORMATION) == IDOK) {
 					for (int y = ListView_GetItemCount(GetDlgItem(Account::ActInfoProc_hwnd, dataInfoListID)) - 1; y >= 0; --y) {
 						if (ListView_GetCheckState(GetDlgItem(Account::ActInfoProc_hwnd, dataInfoListID), y)) {
-							ListView_GetItemText(GetDlgItem(Account::ActInfoProc_hwnd, dataInfoListID), y , 4, tempTCHAR, 8);
+							//获取权限
+							ListView_GetItemText(GetDlgItem(Account::ActInfoProc_hwnd, dataInfoListID), y , 4, tempTCHAR, 4);
 							//进行权限判定
 							if (MyWnds::currentAct.mPer.mAdmin <= _wtoi(tempTCHAR))continue;
+							//获取用户名
+							ListView_GetItemText(GetDlgItem(Account::ActInfoProc_hwnd, dataInfoListID), y, 2, tempTCHAR, actUserName);
 							Data<Account>::DataDelete(_T("Account.dat"), tempTCHAR);
 						}
 					}
@@ -341,14 +351,14 @@ void Account::ActInfoProc_WM_NOTIFY() {
 			if (MyWnds::currentAct.mPer.mAdmin)ShowWindow(GetDlgItem(Account::ActInfoProc_hwnd, browseActSysLinkID), SW_HIDE);
 			//保存
 			CreateWindowEx(
-				0, _T("SysLink"), _T("<A HREF=\"保存\">保存</A>"), WS_CHILD | WS_VISIBLE | LWS_TRANSPARENT,
+				0, _T("SysLink"), _T("<A HREF=\"保存\">保存</A>"), WS_CHILD | WS_VISIBLE | LWS_TRANSPARENT | WS_TABSTOP,
 				int(0.5 * MyWnds::homePageWidth), int(0.15 * MyWnds::homePageHeight), int(0.1 * MyWnds::homePageWidth), int(0.05 * MyWnds::homePageHeight),
 				Account::ActInfoProc_hwnd, HMENU(actSaveSysLinkID), MyWnds::hInstance, NULL
 			);
 			SendMessage(GetDlgItem(Account::ActInfoProc_hwnd, actSaveSysLinkID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
 			//输入框
 			CreateWindowEx(
-				WS_EX_CLIENTEDGE, WC_EDIT, MyWnds::currentAct.mName, WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL,
+				WS_EX_CLIENTEDGE, WC_EDIT, MyWnds::currentAct.mName, WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL | WS_TABSTOP,
 				int(0.2 * MyWnds::homePageWidth), int(0.14 * MyWnds::homePageHeight), int(0.25 * MyWnds::homePageWidth), int(0.05 * MyWnds::homePageHeight),
 				Account::ActInfoProc_hwnd, HMENU(editActInfoEditID), MyWnds::hInstance, NULL
 			);
@@ -370,14 +380,14 @@ void Account::ActInfoProc_WM_NOTIFY() {
 			if (MyWnds::currentAct.mPer.mAdmin)ShowWindow(GetDlgItem(Account::ActInfoProc_hwnd, browseActSysLinkID), SW_HIDE);
 			//保存
 			CreateWindowEx(
-				0, _T("SysLink"), _T("<A HREF=\"保存\">保存</A>"), WS_CHILD | WS_VISIBLE | LWS_TRANSPARENT,
+				0, _T("SysLink"), _T("<A HREF=\"保存\">保存</A>"), WS_CHILD | WS_VISIBLE | LWS_TRANSPARENT | WS_TABSTOP,
 				int(0.5 * MyWnds::homePageWidth), int(0.45 * MyWnds::homePageHeight), int(0.1 * MyWnds::homePageWidth), int(0.05 * MyWnds::homePageHeight),
 				Account::ActInfoProc_hwnd, HMENU(actSaveSysLinkID), MyWnds::hInstance, NULL
 			);
 			SendMessage(GetDlgItem(Account::ActInfoProc_hwnd, actSaveSysLinkID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
 			//输入框
 			CreateWindowEx(
-				WS_EX_CLIENTEDGE, WC_EDIT, MyWnds::currentAct.mPasswd, WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL,
+				WS_EX_CLIENTEDGE, WC_EDIT, MyWnds::currentAct.mPasswd, WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL | WS_TABSTOP,
 				int(0.15 * MyWnds::homePageWidth), int(0.44 * MyWnds::homePageHeight), int(0.25 * MyWnds::homePageWidth), int(0.05 * MyWnds::homePageHeight),
 				Account::ActInfoProc_hwnd, HMENU(editActInfoEditID), MyWnds::hInstance, NULL
 			);
@@ -391,7 +401,7 @@ void Account::ActInfoProc_WM_NOTIFY() {
 		{
 			if (PNMLINK(Account::ActInfoProc_lParam)->item.iLink == 0)//充值
 			{
-				MessageBox(Account::ActInfoProc_hwnd, _T("新功能还在开发中(～￣▽￣)～"), _T("维护"), MB_OK | MB_ICONERROR);
+				MessageBox(Account::ActInfoProc_hwnd, _T("没有做这个功能嘞╮（╯＿╰）╭\n便于后续扩展(如果是真的软件的话)"), _T("维护"), MB_OK | MB_ICONERROR);
 				//ShellExecute(NULL, _T("open"), _T("https://github.com/ISQIShI/Amusement-Park-Management-System"), NULL, NULL, SW_SHOW);
 			}
 			else if (PNMLINK(Account::ActInfoProc_lParam)->item.iLink == 1)//提现
@@ -436,6 +446,16 @@ void Account::ActInfoProc_WM_NOTIFY() {
 		}
 	}
 	break;
+
+	case LVN_COLUMNCLICK:
+	{
+		ListCompareHandle = Account::ActInfoProc_hwnd;
+		ListView_SortItemsEx(GetDlgItem(Account::ActInfoProc_hwnd, dataInfoListID), ListCompareFunc, Account::ActInfoProc_lParam);
+		if (ListCompareFlag)ListCompareFlag = 0;
+		else ListCompareFlag = 1;
+		break;
+	}
+
 	}
 }
 
@@ -471,14 +491,14 @@ void Account::ActInfoProc_WM_CREATE() {
 	Account::actInfoSysLinkFlag = 0;
 	//编辑用户昵称
 	CreateWindowEx(
-		0, _T("SysLink"), _T("<A HREF=\"编辑\">编辑</A>"), WS_CHILD | WS_VISIBLE | LWS_TRANSPARENT,
+		0, _T("SysLink"), _T("<A HREF=\"编辑\">编辑</A>"), WS_CHILD | WS_VISIBLE | LWS_TRANSPARENT | WS_TABSTOP,
 		int(0.5 * MyWnds::homePageWidth), int(0.15 * MyWnds::homePageHeight), int(0.1 * MyWnds::homePageWidth), int(0.05 * MyWnds::homePageHeight),
 		Account::ActInfoProc_hwnd, HMENU(editActNameSysLinkID), MyWnds::hInstance, NULL
 	);
 	SendMessage(GetDlgItem(Account::ActInfoProc_hwnd, editActNameSysLinkID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
 	//更改密码
 	CreateWindowEx(
-		0, _T("SysLink"), _T("<A HREF=\"更改密码\">更改密码</A>"), WS_CHILD | WS_VISIBLE | LWS_TRANSPARENT,
+		0, _T("SysLink"), _T("<A HREF=\"更改密码\">更改密码</A>"), WS_CHILD | WS_VISIBLE | LWS_TRANSPARENT | WS_TABSTOP,
 		int(0.49 * MyWnds::homePageWidth), int(0.45 * MyWnds::homePageHeight), int(0.15 * MyWnds::homePageWidth), int(0.05 * MyWnds::homePageHeight),
 		Account::ActInfoProc_hwnd, HMENU(editPasswdSysLinkID), MyWnds::hInstance, NULL
 	);
@@ -486,14 +506,14 @@ void Account::ActInfoProc_WM_CREATE() {
 	//充值/提现
 	CreateWindowEx(
 		0, _T("SysLink"), _T("<A HREF=\"充值\">充值</A>")\
-		_T("|<A HREF=\"提现\"> 提现 </A>"), WS_CHILD | WS_VISIBLE | LWS_TRANSPARENT,
+		_T("|<A HREF=\"提现\"> 提现 </A>"), WS_CHILD | WS_VISIBLE | LWS_TRANSPARENT | WS_TABSTOP,
 		int(0.48 * MyWnds::homePageWidth), int(0.75 * MyWnds::homePageHeight), int(0.15 * MyWnds::homePageWidth), int(0.05 * MyWnds::homePageHeight),
 		Account::ActInfoProc_hwnd, HMENU(creditSysLinkID), MyWnds::hInstance, NULL
 	);
 	SendMessage(GetDlgItem(Account::ActInfoProc_hwnd, creditSysLinkID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
 	//注销用户
 	CreateWindowEx(
-		0, _T("SysLink"), _T("<A HREF=\"注销用户\">注销用户</A>"), WS_CHILD | WS_VISIBLE | LWS_TRANSPARENT,
+		0, _T("SysLink"), _T("<A HREF=\"注销用户\">注销用户</A>"), WS_CHILD | WS_VISIBLE | LWS_TRANSPARENT | WS_TABSTOP,
 		int(0.49 * MyWnds::homePageWidth), int(0.9 * MyWnds::homePageHeight), int(0.15 * MyWnds::homePageWidth), int(0.05 * MyWnds::homePageHeight),
 		Account::ActInfoProc_hwnd, HMENU(logoutSysLinkID), MyWnds::hInstance, NULL
 	);
@@ -501,7 +521,7 @@ void Account::ActInfoProc_WM_CREATE() {
 	//查看所有用户（需要权限）
 	if (MyWnds::currentAct.mPer.mAdmin) {
 		CreateWindowEx(
-			0, _T("SysLink"), _T("<A HREF=\"查看所有用户\">查看所有用户</A>"), WS_CHILD | WS_VISIBLE | LWS_TRANSPARENT,
+			0, _T("SysLink"), _T("<A HREF=\"查看所有用户\">查看所有用户</A>"), WS_CHILD | WS_VISIBLE | LWS_TRANSPARENT | WS_TABSTOP,
 			int(0.1 * MyWnds::homePageWidth), int(0.05 * MyWnds::homePageHeight), int(0.3 * MyWnds::homePageWidth), int(0.05 * MyWnds::homePageHeight),
 			Account::ActInfoProc_hwnd, HMENU(browseActSysLinkID), MyWnds::hInstance, NULL
 		);
@@ -512,7 +532,7 @@ void Account::ActInfoProc_WM_CREATE() {
 void Account::ActInfo() {
 	//创建窗口---用户信息
 	HWND actInfoHwnd = CreateWindowEx(
-		0, _T("actInfoClassName"), _T("用户信息"), WS_TILED | WS_CHILD | WS_VISIBLE,
+		WS_EX_CONTROLPARENT, _T("actInfoClassName"), _T("用户信息"), WS_TILED | WS_CHILD | WS_VISIBLE,
 		int((homePageButtonWidth + homePageButtonCoord_X * 2) * MyWnds::defMainWndWidth), int(homePageButtonCoord_Y / 2.0 * MyWnds::defMainWndHeight), MyWnds::homePageWidth, MyWnds::homePageHeight,
 		MyWnds::MainWndProc_hwnd, HMENU(actInfoWndID), MyWnds::hInstance, NULL
 	);
@@ -534,7 +554,7 @@ void Account::ActInfo() {
 
 		//创建窗口---用户信息
 		actInfoHwnd = CreateWindowEx(
-			0, _T("actInfoClassName"), _T("用户信息"), WS_TILED | WS_CHILD | WS_VISIBLE,
+			WS_EX_CONTROLPARENT, _T("actInfoClassName"), _T("用户信息"), WS_TILED | WS_CHILD | WS_VISIBLE,
 			int((homePageButtonWidth + homePageButtonCoord_X * 2) * MyWnds::defMainWndWidth), int(homePageButtonCoord_Y / 2.0 * MyWnds::defMainWndHeight), MyWnds::homePageWidth, MyWnds::homePageHeight,
 			MyWnds::MainWndProc_hwnd, HMENU(actInfoWndID), MyWnds::hInstance, NULL
 		);
@@ -544,3 +564,10 @@ void Account::ActInfo() {
 		}
 	}
 }
+
+//购票
+void Account::BuyTicket(){}//仅留下接口，实际作为软件的话在通过机器刷卡时应调用此函数
+//充值
+void Account::Recharge(){}//为实际使用留下接口
+//提现
+void Account::Withdraw(){} //为实际使用留下接口
