@@ -445,6 +445,67 @@ LRESULT CALLBACK MyWnds::HomePageProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARA
 	MyWnds::HomePageProc_lParam = lParam;
 	switch (uMsg)
 	{
+	case WM_CREATE:
+	{
+		//GitHub页面
+		CreateWindowEx(
+			0, _T("SysLink"), _T("<A HREF=\"GitHub链接\">https://github.com/ISQIShI/Amusement-Park-Management-System</A>"), WS_CHILD | WS_VISIBLE | LWS_TRANSPARENT | WS_TABSTOP,
+			int(0.23 * MyWnds::homePageWidth), int(0.89 * MyWnds::homePageHeight), int(0.7 * MyWnds::homePageWidth), int(0.03 * MyWnds::homePageHeight),
+			MyWnds::HomePageProc_hwnd, HMENU(gitHubSysLinkID), MyWnds::hInstance, NULL
+		);
+		SendMessage(GetDlgItem(MyWnds::HomePageProc_hwnd, gitHubSysLinkID), WM_SETFONT, (WPARAM)MyWnds::currentHFONT, TRUE);
+
+		break;
+	}
+	case WM_NOTIFY:
+	{
+		switch (((LPNMHDR)MyWnds::HomePageProc_lParam)->code)
+		{
+		case NM_CLICK:case NM_RETURN://单击
+		{
+		case gitHubSysLinkID:
+		{
+			ShellExecute(NULL, _T("open"), _T("https://github.com/ISQIShI/Amusement-Park-Management-System"), NULL, NULL, SW_SHOW);
+			break;
+		}
+			break;
+		}
+		}
+		break;
+	}
+	case WM_PAINT:
+	{
+		TCHAR tempTCHAR[50];
+		PAINTSTRUCT ps;
+		MyWnds::hDC = BeginPaint(GetDlgItem(MyWnds::MainWndProc_hwnd, homePageWndID), &ps);
+		SelectObject(MyWnds::hDC, MyWnds::currentHFONT);
+		SetTextColor(MyWnds::hDC, RGB(46, 134, 193));//文字前景色
+		//SetBkColor(MyWnds::hDC, RGB(93, 173, 226));//文字背景色
+		//SetBkMode(MyWnds::hDC, TRANSPARENT);//背景透明
+		TextOut(MyWnds::hDC, int(0.4  * MyWnds::homePageWidth), int(0.1  * MyWnds::homePageHeight), _T("欢迎使用游乐园管理系统"), wcslen(_T("欢迎使用游乐园管理系统")));
+		TextOut(MyWnds::hDC, int(0.28 * MyWnds::homePageWidth), int(0.13 * MyWnds::homePageHeight), _T("Welcome to the Amusement Park Management System"), wcslen(_T("Welcome to the Amusement Park Management System")));
+		SetTextColor(MyWnds::hDC, RGB(52, 152, 219));//文字前景色
+
+		TextOut(MyWnds::hDC, int(0.3 * MyWnds::homePageWidth), int(0.25 * MyWnds::homePageHeight), _T("本系统的主要功能："), wcslen(_T("本系统的主要功能：")));
+		TextOut(MyWnds::hDC, int(0.3 * MyWnds::homePageWidth), int(0.28 * MyWnds::homePageHeight), _T("普通账户↓"), wcslen(_T("普通账户↓")));
+		TextOut(MyWnds::hDC, int(0.3 * MyWnds::homePageWidth), int(0.31 * MyWnds::homePageHeight), _T("查询/修改个人信息"), wcslen(_T("查询/修改个人信息")));
+		TextOut(MyWnds::hDC, int(0.3 * MyWnds::homePageWidth), int(0.34 * MyWnds::homePageHeight), _T("查询游乐园设备信息"), wcslen(_T("查询游乐园设备信息：")));
+		TextOut(MyWnds::hDC, int(0.3 * MyWnds::homePageWidth), int(0.37 * MyWnds::homePageHeight), _T("查询个人消费记录"), wcslen(_T("查询个人消费记录")));
+		TextOut(MyWnds::hDC, int(0.3 * MyWnds::homePageWidth), int(0.4 * MyWnds::homePageHeight), _T("管理员账户↓"), wcslen(_T("管理员账户↓")));
+		TextOut(MyWnds::hDC, int(0.3 * MyWnds::homePageWidth), int(0.43 * MyWnds::homePageHeight), _T("查询/修改个人信息"), wcslen(_T("查询/修改个人信息")));
+		TextOut(MyWnds::hDC, int(0.3 * MyWnds::homePageWidth), int(0.46 * MyWnds::homePageHeight), _T("增加/修改/删除其他用户信息(需要权限高于对方账户)"), wcslen(_T("增加/修改/删除其他用户信息(需要权限高于对方账户)")));
+		TextOut(MyWnds::hDC, int(0.3 * MyWnds::homePageWidth), int(0.49 * MyWnds::homePageHeight), _T("增加/修改/删除所有设备信息"), wcslen(_T("增加/修改/删除所有设备信息")));
+		TextOut(MyWnds::hDC, int(0.3 * MyWnds::homePageWidth), int(0.52 * MyWnds::homePageHeight), _T("增加/修改/删除所有交易记录"), wcslen(_T("增加/修改/删除所有交易记录")));
+
+		SetTextColor(MyWnds::hDC, RGB(46, 134, 193));//文字前景色
+		TextOut(MyWnds::hDC, int(0.39 * MyWnds::homePageWidth), int(0.8  * MyWnds::homePageHeight), _T("本项目为大一下期课设项目"), wcslen(_T("本项目为大一下期课设项目")));
+		TextOut(MyWnds::hDC, int(0.41 * MyWnds::homePageWidth), int(0.83 * MyWnds::homePageHeight), _T("Created By ISQIShI"), wcslen(_T("Created By ISQIShI")));
+		TextOut(MyWnds::hDC, int(0.3 * MyWnds::homePageWidth), int(0.86 * MyWnds::homePageHeight), _T("项目详情请点击下方链接，进入我的GitHub页面查看"), wcslen(_T("项目详情请点击下方链接，进入我的GitHub页面查看")));
+
+		EndPaint(GetDlgItem(MyWnds::MainWndProc_hwnd, homePageWndID), &ps);
+		MyWnds::hDC = NULL;
+		break;
+	}
 	default://未自定义的其他消息
 		return DefWindowProc(hwnd, uMsg, wParam, lParam);//默认窗口过程
 	}
@@ -700,6 +761,7 @@ LRESULT CALLBACK MyWnds::DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM 
 								}
 							}
 							else if (!_tcscmp(tempTCHAR, _T("按用户总消费"))) {
+								int consume = 0;//游乐场总收入
 								int itemCount = 0;
 								//增加新的一列--用户总消费
 								LVCOLUMN temp = { 0 };
@@ -713,7 +775,9 @@ LRESULT CALLBACK MyWnds::DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM 
 								ListView_InsertColumn(GetDlgItem(Trade::TradeInfoProc_hwnd, dataInfoListID), 6, &temp);
 								LVITEM tempINSERT = { 0 };
 								tempINSERT.mask = LVIF_TEXT;
+								//读取用户选择列表的每一个用户
 								for (int yy = ListView_GetItemCount(GetDlgItem(MyWnds::DialogProc_hwnd, userNameSelectListID)) - 1; yy >= 0; --yy) {
+									//如果没选按用户，计算并显示每个用户的消费总额。如果选了按用户，只显示选择的用户的消费总额。
 									if (!ListView_GetCheckState(GetDlgItem(MyWnds::DialogProc_hwnd, selectListID), 0) || (ListView_GetCheckState(GetDlgItem(MyWnds::DialogProc_hwnd, selectListID), 0) && ListView_GetCheckState(GetDlgItem(MyWnds::DialogProc_hwnd, userNameSelectListID), yy))) {
 										//获取筛选列表中选定的用户名
 										UINT totalConsume = 0;
@@ -729,6 +793,7 @@ LRESULT CALLBACK MyWnds::DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM 
 												ListView_DeleteItem(GetDlgItem(Trade::TradeInfoProc_hwnd, dataInfoListID), yyy);
 											}
 										}
+										consume += totalConsume;
 										//在列表末尾插入新的数据
 										tempINSERT.iItem = ListView_GetItemCount(GetDlgItem(Trade::TradeInfoProc_hwnd, dataInfoListID));
 										tempINSERT.iSubItem = 0;
@@ -745,12 +810,28 @@ LRESULT CALLBACK MyWnds::DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM 
 										tempINSERT.iSubItem = 6;
 										_stprintf_s(_tempTCHAR, _T("%d"), totalConsume);
 										tempINSERT.pszText = _tempTCHAR;
-										ListView_SetItem(GetDlgItem(Trade::TradeInfoProc_hwnd, dataInfoListID), &tempINSERT);
-
-										
+										ListView_SetItem(GetDlgItem(Trade::TradeInfoProc_hwnd, dataInfoListID), &tempINSERT);										
 										++itemCount;
 									}
 								}
+								//在列表末尾插入游乐场总消费
+								tempINSERT.iItem = ListView_GetItemCount(GetDlgItem(Trade::TradeInfoProc_hwnd, dataInfoListID));
+								tempINSERT.iSubItem = 0;
+								_stprintf_s(_tempTCHAR, _T("%d"), 0);
+								tempINSERT.pszText = _tempTCHAR;
+								ListView_InsertItem(GetDlgItem(Trade::TradeInfoProc_hwnd, dataInfoListID), &tempINSERT);
+
+								//用户名
+								tempINSERT.iSubItem = 3;
+								tempINSERT.pszText = (LPTSTR)_T("总消费");
+								ListView_SetItem(GetDlgItem(Trade::TradeInfoProc_hwnd, dataInfoListID), &tempINSERT);
+
+								//总消费
+								tempINSERT.iSubItem = 6;
+								_stprintf_s(_tempTCHAR, _T("%d"), consume);
+								tempINSERT.pszText = _tempTCHAR;
+								ListView_SetItem(GetDlgItem(Trade::TradeInfoProc_hwnd, dataInfoListID), &tempINSERT);
+
 								//删除不需要的列
 								ListView_DeleteColumn(GetDlgItem(Trade::TradeInfoProc_hwnd, dataInfoListID), 5);//交易时间
 								ListView_DeleteColumn(GetDlgItem(Trade::TradeInfoProc_hwnd, dataInfoListID), 4);//设备ID
@@ -759,6 +840,7 @@ LRESULT CALLBACK MyWnds::DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM 
 								ListView_DeleteColumn(GetDlgItem(Trade::TradeInfoProc_hwnd, dataInfoListID), 0);//序号
 							}
 							else if (!_tcscmp(tempTCHAR, _T("按设备总收入"))) {
+								int income = 0;//游乐场总收入
 								int itemCount = 0;
 								//增加新的一列--设备总收入
 								LVCOLUMN temp = { 0 };
@@ -772,7 +854,9 @@ LRESULT CALLBACK MyWnds::DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM 
 								ListView_InsertColumn(GetDlgItem(Trade::TradeInfoProc_hwnd, dataInfoListID), 6, &temp);
 								LVITEM tempINSERT = { 0 };
 								tempINSERT.mask = LVIF_TEXT;
+								//读取设备选择列表的每一个设备
 								for (int yy = ListView_GetItemCount(GetDlgItem(MyWnds::DialogProc_hwnd, devIDSelectListID)) - 1; yy >= 0; --yy) {
+									//如果没选按设备，计算并显示每个设备的收入总额。如果选了按设备，只显示选择的设备的收入总额。
 									if (!ListView_GetCheckState(GetDlgItem(MyWnds::DialogProc_hwnd, selectListID), 1) || (ListView_GetCheckState(GetDlgItem(MyWnds::DialogProc_hwnd, selectListID), 1) && ListView_GetCheckState(GetDlgItem(MyWnds::DialogProc_hwnd, devIDSelectListID), yy))) {
 										//获取筛选列表中选定的设备ID
 										UINT totalIncome = 0;
@@ -788,6 +872,7 @@ LRESULT CALLBACK MyWnds::DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM 
 												ListView_DeleteItem(GetDlgItem(Trade::TradeInfoProc_hwnd, dataInfoListID), yyy);
 											}
 										}
+										income += totalIncome;
 										//在列表末尾插入新的数据
 										tempINSERT.iItem = ListView_GetItemCount(GetDlgItem(Trade::TradeInfoProc_hwnd, dataInfoListID));
 										tempINSERT.iSubItem = 0;
@@ -806,26 +891,36 @@ LRESULT CALLBACK MyWnds::DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM 
 										tempINSERT.pszText = _tempTCHAR;
 										ListView_SetItem(GetDlgItem(Trade::TradeInfoProc_hwnd, dataInfoListID), &tempINSERT);
 
-
 										++itemCount;
 									}
 								}
+								//在列表末尾插入总收入
+								tempINSERT.iItem = ListView_GetItemCount(GetDlgItem(Trade::TradeInfoProc_hwnd, dataInfoListID));
+								tempINSERT.iSubItem = 0;
+								_stprintf_s(_tempTCHAR, _T("%d"), 0);
+								tempINSERT.pszText = _tempTCHAR;
+								ListView_InsertItem(GetDlgItem(Trade::TradeInfoProc_hwnd, dataInfoListID), &tempINSERT);
+
+								//设备ID
+								tempINSERT.iSubItem = 4;
+								tempINSERT.pszText = (LPTSTR)_T("总收入");
+								ListView_SetItem(GetDlgItem(Trade::TradeInfoProc_hwnd, dataInfoListID), &tempINSERT);
+
+								//总收入
+								tempINSERT.iSubItem = 6;
+								_stprintf_s(_tempTCHAR, _T("%d"), income);
+								tempINSERT.pszText = _tempTCHAR;
+								ListView_SetItem(GetDlgItem(Trade::TradeInfoProc_hwnd, dataInfoListID), &tempINSERT);
+
 								//删除不需要的列
 								ListView_DeleteColumn(GetDlgItem(Trade::TradeInfoProc_hwnd, dataInfoListID), 5);//交易时间
 								ListView_DeleteColumn(GetDlgItem(Trade::TradeInfoProc_hwnd, dataInfoListID), 3);//用户名
 								ListView_DeleteColumn(GetDlgItem(Trade::TradeInfoProc_hwnd, dataInfoListID), 2);//金额
 								ListView_DeleteColumn(GetDlgItem(Trade::TradeInfoProc_hwnd, dataInfoListID), 1);//交易ID
 								ListView_DeleteColumn(GetDlgItem(Trade::TradeInfoProc_hwnd, dataInfoListID), 0);//序号
-
 							}
 						}
 					}
-
-
-
-
-
-
 					ShowWindow(GetDlgItem(Trade::TradeInfoProc_hwnd, tradeSelectSysLinkID), SW_HIDE);
 					ShowWindow(GetDlgItem(Trade::TradeInfoProc_hwnd, dataInfoSysLinkID), SW_HIDE);
 					//返回
@@ -1967,6 +2062,9 @@ BOOL CALLBACK MyWnds::EnumChildProc_AdaptiveWnd(HWND hwndChild, LPARAM lParam) {
 
 	case homePageWndID://主页
 		MoveWindow(hwndChild, int((homePageButtonWidth + homePageButtonCoord_X * 2) * MyWnds::defMainWndWidth), int(homePageButtonCoord_Y / 2.0 * MyWnds::defMainWndHeight), MyWnds::homePageWidth, MyWnds::homePageHeight, TRUE);
+		break;
+	case gitHubSysLinkID:
+		MoveWindow(hwndChild, int(0.23 * MyWnds::homePageWidth), int(0.89 * MyWnds::homePageHeight), int(0.7 * MyWnds::homePageWidth), int(0.03 * MyWnds::homePageHeight), TRUE);
 		break;
 
 	case actInfoWndID://用户信息

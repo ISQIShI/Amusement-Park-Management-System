@@ -402,7 +402,6 @@ void Account::ActInfoProc_WM_NOTIFY() {
 			if (PNMLINK(Account::ActInfoProc_lParam)->item.iLink == 0)//充值
 			{
 				MessageBox(Account::ActInfoProc_hwnd, _T("没有做这个功能嘞╮（╯＿╰）╭\n便于后续扩展(如果是真的软件的话)"), _T("维护"), MB_OK | MB_ICONERROR);
-				//ShellExecute(NULL, _T("open"), _T("https://github.com/ISQIShI/Amusement-Park-Management-System"), NULL, NULL, SW_SHOW);
 			}
 			else if (PNMLINK(Account::ActInfoProc_lParam)->item.iLink == 1)//提现
 			{

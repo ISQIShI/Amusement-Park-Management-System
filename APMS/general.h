@@ -95,7 +95,7 @@ typedef unsigned char BYTE;
 #define editDevIntroSysLinkID 409//编辑设备介绍
 #define devSaveSysLinkID 410//保存(设备信息)
 #define tradeSelectSysLinkID 411//筛选交易记录
-
+#define gitHubSysLinkID 412//GitHub链接
 //ListView
 #define dataInfoListID 501//数据信息列表
 #define selectListID 502

@@ -1,6 +1,8 @@
 #pragma once
 #include"Time.h"
 
+//本类为未来的拓展预留接口，不再实际做功能
+
 class Recharge {
 private:
 	//充值ID
